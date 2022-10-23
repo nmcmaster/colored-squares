@@ -6,14 +6,18 @@ function App() {
 	const [color, setColor] = useState('#84cc16');
 
 	return (
-		<div className="App">
-			<button onClick={() => setColor('#3b82f6')}>click</button>
-			<motion.div
-				initial={{ backgroundColor: '#84cc16' }}
-				animate={{ backgroundColor: color }}
-        transition={{duration: 5}}
-				className="h-10 w-8"
-			/>
+		<div className="w-screen h-screen">
+			<div
+				style={{ width: '50vw', height: '50vw', marginTop: '12%' }}
+				className="mx-auto shadow-xl"
+			>
+				<div className='flex h-1/4'>
+					<div className="w-1/4 h-1/4 bg-slate-900" />
+					<div className="w-1/4 h-1/4 bg-slate-700" />
+					<div className="w-1/4 h-1/4 bg-slate-500" />
+					<div className="w-1/4 h-1/4 bg-slate-300" />
+				</div>
+			</div>
 		</div>
 	);
 }

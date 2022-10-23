@@ -14,7 +14,7 @@ interface SquareProps {
 const Board = () => {
 	return (
 		<div
-			style={{ width: '50vw', height: '50vw', marginTop: '5%' }}
+			style={{ width: '50vw', height: '50vw'}}
 			className="mx-auto shadow-xl flex flex-wrap"
 		>
 			{randoms.map((x, i) => (
@@ -38,7 +38,7 @@ function App() {
 	console.log(randoms);
 
 	return (
-		<div className="w-screen h-screen">
+		<div className="w-screen h-screen bg-slate-800 pt-28">
 			<Board />
 		</div>
 	);

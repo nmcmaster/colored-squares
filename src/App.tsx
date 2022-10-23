@@ -38,7 +38,7 @@ function App() {
 	console.log(randoms);
 
 	return (
-		<div className="w-screen h-screen bg-slate-800 pt-28">
+		<div className="w-screen h-screen bg-slate-800 pt-26">
 			<Board />
 		</div>
 	);

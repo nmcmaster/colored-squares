@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-const ColorMatchGame = () => {
+const ColorMatchGame = ({ autoStartWatch = false }) => {
   // Game configuration
   const LEVELS = [
     { gridSize: 4, threshold: 35, morphSpeed: 0.008 },
@@ -297,6 +297,13 @@ const ColorMatchGame = () => {
     setFloatingScores([]);
     setGameState('playing');
   };
+
+  // Auto-start watch mode if prop is set
+  useEffect(() => {
+    if (autoStartWatch) {
+      startGame(0, true);
+    }
+  }, []);
 
   // Initialize grid when level changes or game starts
   useEffect(() => {

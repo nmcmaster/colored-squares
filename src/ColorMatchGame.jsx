@@ -553,8 +553,17 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
       <div className="min-h-screen min-w-full bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex flex-col items-center justify-center p-1">
         {/* Compact header - score and time only */}
         <div className="w-full max-w-[200px] flex justify-between items-center mb-2 px-1">
-          <div className={`text-2xl font-bold tabular-nums ${displayScore < score ? 'flame-text' : 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400'}`}>
-            {displayScore}
+          <div className="relative">
+            {displayScore < score && (
+              <>
+                <span className="flame-ember-sm flame-1">🔥</span>
+                <span className="flame-ember-sm flame-2">🔥</span>
+                <span className="flame-ember-sm flame-3">🔥</span>
+              </>
+            )}
+            <div className={`relative z-10 text-2xl font-bold tabular-nums ${displayScore < score ? 'flame-text' : 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400'}`}>
+              {displayScore}
+            </div>
           </div>
           <div className={`text-lg font-mono text-white ${timeLeft <= 10 ? 'text-red-400 animate-pulse' : ''}`}>
             {timeLeft}s
@@ -715,6 +724,28 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
             -webkit-background-clip: text;
             background-clip: text;
           }
+          @keyframes riseAndBurn {
+            0% {
+              transform: translateY(5px) scale(0.5) rotate(-10deg);
+              opacity: 0;
+            }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% {
+              transform: translateY(-25px) scale(1) rotate(10deg);
+              opacity: 0;
+            }
+          }
+          .flame-ember-sm {
+            position: absolute;
+            font-size: 0.9rem;
+            animation: riseAndBurn 0.5s ease-out infinite;
+            filter: brightness(1.3);
+            top: 0;
+          }
+          .flame-1 { left: -5px; animation-delay: 0s; }
+          .flame-2 { left: 50%; animation-delay: 0.1s; transform: translateX(-50%); }
+          .flame-3 { right: -5px; animation-delay: 0.05s; }
         `}</style>
       </div>
     );
@@ -729,8 +760,20 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
           <span className="text-gray-400">Circle</span>{' '}
           <span className="font-bold">{level + 1}</span>
         </div>
-        <div className="text-center">
-          <div className={`text-3xl font-bold tabular-nums ${displayScore < score ? 'flame-text' : ''} ${score >= config.targetScore ? 'text-red-400' : 'text-red-600'}`} style={{ textShadow: score >= config.targetScore ? '0 0 20px rgba(220,38,38,0.7)' : 'none' }}>
+        <div className="text-center relative">
+          {displayScore < score && (
+            <>
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                <span className="flame-ember flame-1">🔥</span>
+                <span className="flame-ember flame-2">🔥</span>
+                <span className="flame-ember flame-3">🔥</span>
+                <span className="flame-ember flame-4">🔥</span>
+                <span className="flame-ember flame-5">🔥</span>
+              </div>
+              <div className="absolute -inset-4 bg-gradient-to-t from-red-900/50 via-orange-600/30 to-transparent rounded-full blur-xl animate-pulse pointer-events-none" />
+            </>
+          )}
+          <div className={`relative z-10 text-3xl font-bold tabular-nums ${displayScore < score ? 'flame-text' : ''} ${score >= config.targetScore ? 'text-red-400' : 'text-red-600'}`} style={{ textShadow: score >= config.targetScore ? '0 0 20px rgba(220,38,38,0.7)' : 'none' }}>
             {displayScore}<span className="text-lg text-gray-500">/{config.targetScore}</span>
           </div>
         </div>
@@ -901,6 +944,33 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
           -webkit-background-clip: text;
           background-clip: text;
         }
+        @keyframes riseAndBurn {
+          0% {
+            transform: translateY(10px) scale(0.5) rotate(-10deg);
+            opacity: 0;
+          }
+          20% {
+            opacity: 1;
+          }
+          80% {
+            opacity: 1;
+          }
+          100% {
+            transform: translateY(-40px) scale(1.2) rotate(10deg);
+            opacity: 0;
+          }
+        }
+        .flame-ember {
+          position: absolute;
+          font-size: 1.5rem;
+          animation: riseAndBurn 0.6s ease-out infinite;
+          filter: brightness(1.3);
+        }
+        .flame-1 { left: 10%; animation-delay: 0s; }
+        .flame-2 { left: 30%; animation-delay: 0.1s; }
+        .flame-3 { left: 50%; animation-delay: 0.05s; transform: translateX(-50%); }
+        .flame-4 { left: 70%; animation-delay: 0.15s; }
+        .flame-5 { left: 90%; animation-delay: 0.08s; }
       `}</style>
     </div>
   );

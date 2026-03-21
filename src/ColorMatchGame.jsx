@@ -28,6 +28,26 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [floatingScores, setFloatingScores] = useState([]);
   const [isWatchMode, setIsWatchMode] = useState(false);
+  const [toasts, setToasts] = useState([]);
+
+  // Toast messages based on match size
+  const getMatchToast = (size) => {
+    if (size <= 2) return null; // No toast for basic matches
+    if (size === 3) return { text: 'Nice!', style: 'normal' };
+    if (size === 4) return { text: 'Great match!', style: 'good' };
+    if (size === 5) return { text: 'Amazing!', style: 'great' };
+    if (size === 6) return { text: 'Incredible!', style: 'amazing' };
+    if (size >= 7) return { text: 'LEGENDARY!', style: 'legendary' };
+  };
+
+  // Show a toast notification
+  const showToast = useCallback((text, style = 'normal', duration = 1500) => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, text, style }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, duration);
+  }, []);
 
   // Mutable game state (refs for animation loop)
   const squaresRef = useRef([]);
@@ -196,6 +216,12 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
       // Score = number of squares in the cluster
       setScore(prev => prev + clusterArray.length);
 
+      // Show celebration toast for bigger matches
+      const matchToast = getMatchToast(clusterArray.length);
+      if (matchToast) {
+        showToast(matchToast.text, matchToast.style);
+      }
+
       // After animation, replace all squares in cluster
       setTimeout(() => {
         const squares = squaresRef.current;
@@ -295,7 +321,13 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
     setScore(0);
     setTimeLeft(watchMode ? WATCH_DURATION : GAME_DURATION);
     setFloatingScores([]);
+    setToasts([]);
     setGameState('playing');
+
+    // Show intro toast
+    setTimeout(() => {
+      showToast('Tap matching colors!', 'intro', 2500);
+    }, 300);
   };
 
   // Auto-start watch mode if prop is set
@@ -482,6 +514,26 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
           ))}
         </div>
 
+        {/* Toasts - watch mode (smaller) */}
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none">
+          {toasts.map(toast => (
+            <div
+              key={toast.id}
+              className={`
+                px-3 py-1.5 rounded-lg text-sm font-bold animate-toast-in
+                ${toast.style === 'intro' ? 'bg-blue-500/90 text-white' : ''}
+                ${toast.style === 'normal' ? 'bg-white/90 text-gray-800' : ''}
+                ${toast.style === 'good' ? 'bg-green-500/90 text-white' : ''}
+                ${toast.style === 'great' ? 'bg-yellow-500/90 text-black' : ''}
+                ${toast.style === 'amazing' ? 'bg-orange-500/90 text-white animate-toast-pulse' : ''}
+                ${toast.style === 'legendary' ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white animate-toast-legendary' : ''}
+              `}
+            >
+              {toast.text}
+            </div>
+          ))}
+        </div>
+
         {/* Custom animations */}
         <style>{`
           @keyframes float {
@@ -504,6 +556,35 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
           }
           .animate-shake {
             animation: shake 0.2s ease-in-out;
+          }
+          @keyframes toastIn {
+            0% {
+              opacity: 0;
+              transform: translateY(-20px) scale(0.8);
+            }
+            100% {
+              opacity: 1;
+              transform: translateY(0) scale(1);
+            }
+          }
+          .animate-toast-in {
+            animation: toastIn 0.3s ease-out forwards;
+          }
+          @keyframes toastPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+          }
+          .animate-toast-pulse {
+            animation: toastIn 0.3s ease-out, toastPulse 0.4s ease-in-out 0.3s infinite;
+          }
+          @keyframes toastLegendary {
+            0%, 100% { transform: scale(1) rotate(-1deg); }
+            25% { transform: scale(1.1) rotate(1deg); }
+            50% { transform: scale(1.05) rotate(-1deg); }
+            75% { transform: scale(1.1) rotate(1deg); }
+          }
+          .animate-toast-legendary {
+            animation: toastIn 0.3s ease-out, toastLegendary 0.5s ease-in-out 0.3s infinite;
           }
         `}</style>
       </div>
@@ -582,6 +663,26 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
         ← Menu
       </button>
 
+      {/* Toasts */}
+      <div className="fixed top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none">
+        {toasts.map(toast => (
+          <div
+            key={toast.id}
+            className={`
+              px-5 py-2 rounded-xl text-lg font-bold shadow-lg animate-toast-in
+              ${toast.style === 'intro' ? 'bg-blue-500/90 text-white' : ''}
+              ${toast.style === 'normal' ? 'bg-white/90 text-gray-800' : ''}
+              ${toast.style === 'good' ? 'bg-green-500/90 text-white text-xl' : ''}
+              ${toast.style === 'great' ? 'bg-yellow-500/90 text-black text-xl' : ''}
+              ${toast.style === 'amazing' ? 'bg-orange-500/90 text-white text-2xl animate-toast-pulse' : ''}
+              ${toast.style === 'legendary' ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white text-3xl animate-toast-legendary' : ''}
+            `}
+          >
+            {toast.text}
+          </div>
+        ))}
+      </div>
+
       {/* Custom animations */}
       <style>{`
         @keyframes float {
@@ -604,6 +705,35 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
         }
         .animate-shake {
           animation: shake 0.3s ease-in-out;
+        }
+        @keyframes toastIn {
+          0% {
+            opacity: 0;
+            transform: translateY(-20px) scale(0.8);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
+        }
+        .animate-toast-in {
+          animation: toastIn 0.3s ease-out forwards;
+        }
+        @keyframes toastPulse {
+          0%, 100% { transform: scale(1); }
+          50% { transform: scale(1.1); }
+        }
+        .animate-toast-pulse {
+          animation: toastIn 0.3s ease-out, toastPulse 0.4s ease-in-out 0.3s infinite;
+        }
+        @keyframes toastLegendary {
+          0%, 100% { transform: scale(1) rotate(-2deg); }
+          25% { transform: scale(1.15) rotate(2deg); }
+          50% { transform: scale(1.1) rotate(-2deg); }
+          75% { transform: scale(1.15) rotate(2deg); }
+        }
+        .animate-toast-legendary {
+          animation: toastIn 0.3s ease-out, toastLegendary 0.5s ease-in-out 0.3s infinite;
         }
       `}</style>
     </div>

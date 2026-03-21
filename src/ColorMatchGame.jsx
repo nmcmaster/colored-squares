@@ -56,6 +56,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   const gridRef = useRef(null);
   const matchingSquaresRef = useRef(new Set());
   const invalidSquareRef = useRef(null);
+  const hasAutoStartedRef = useRef(false);
 
   // Get current level config
   const getLevelConfig = useCallback(() => {
@@ -342,11 +343,15 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
     }, 300);
   };
 
-  // Auto-start if props are set
+  // Auto-start if props are set (guard against StrictMode double-fire)
   useEffect(() => {
+    if (hasAutoStartedRef.current) return;
+
     if (autoStartWatch) {
+      hasAutoStartedRef.current = true;
       startGame(0, true);
     } else if (autoStartLevel !== null) {
+      hasAutoStartedRef.current = true;
       startGame(autoStartLevel, false);
     }
   }, []);

@@ -514,25 +514,27 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
           ))}
         </div>
 
-        {/* Toasts - watch mode (smaller) */}
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none">
-          {toasts.map(toast => (
-            <div
-              key={toast.id}
-              className={`
-                px-3 py-1.5 rounded-lg text-sm font-bold animate-toast-in
-                ${toast.style === 'intro' ? 'bg-blue-500/90 text-white' : ''}
-                ${toast.style === 'normal' ? 'bg-white/90 text-gray-800' : ''}
-                ${toast.style === 'good' ? 'bg-green-500/90 text-white' : ''}
-                ${toast.style === 'great' ? 'bg-yellow-500/90 text-black' : ''}
-                ${toast.style === 'amazing' ? 'bg-orange-500/90 text-white animate-toast-pulse' : ''}
-                ${toast.style === 'legendary' ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white animate-toast-legendary' : ''}
-              `}
-            >
-              {toast.text}
-            </div>
-          ))}
-        </div>
+        {/* Toasts - watch mode (centered overlay for visibility) */}
+        {toasts.length > 0 && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 pointer-events-none">
+            {toasts.map(toast => (
+              <div
+                key={toast.id}
+                className={`
+                  px-4 py-2 rounded-xl font-bold animate-toast-in shadow-xl
+                  ${toast.style === 'intro' ? 'bg-blue-500 text-white text-base' : ''}
+                  ${toast.style === 'normal' ? 'bg-white text-gray-800 text-lg' : ''}
+                  ${toast.style === 'good' ? 'bg-green-500 text-white text-lg' : ''}
+                  ${toast.style === 'great' ? 'bg-yellow-400 text-black text-xl' : ''}
+                  ${toast.style === 'amazing' ? 'bg-orange-500 text-white text-xl animate-toast-pulse' : ''}
+                  ${toast.style === 'legendary' ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white text-2xl animate-toast-legendary' : ''}
+                `}
+              >
+                {toast.text}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Custom animations */}
         <style>{`

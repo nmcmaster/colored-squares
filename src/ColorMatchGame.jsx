@@ -25,6 +25,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   const [gameState, setGameState] = useState('menu'); // 'menu', 'playing', 'levelComplete', 'gameover'
   const [level, setLevel] = useState(0);
   const [score, setScore] = useState(0);
+  const [displayScore, setDisplayScore] = useState(0); // Animated score display
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
   const [floatingScores, setFloatingScores] = useState([]);
   const [isWatchMode, setIsWatchMode] = useState(false);
@@ -302,6 +303,25 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
     scoreRef.current = score;
   }, [score]);
 
+  // Animate displayScore to match actual score (casino-style rolling)
+  useEffect(() => {
+    if (displayScore === score) return;
+
+    const diff = score - displayScore;
+    // Faster tick for bigger combos, but cap at reasonable speed
+    const tickSpeed = Math.max(30, 150 - diff * 10);
+
+    const ticker = setInterval(() => {
+      setDisplayScore(prev => {
+        if (prev < score) return prev + 1;
+        clearInterval(ticker);
+        return score;
+      });
+    }, tickSpeed);
+
+    return () => clearInterval(ticker);
+  }, [score, displayScore]);
+
   // Timer effect
   useEffect(() => {
     if (gameState !== 'playing') return;
@@ -344,6 +364,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
     setIsWatchMode(watchMode);
     setLevel(selectedLevel);
     setScore(0);
+    setDisplayScore(0);
     setTimeLeft(watchMode ? WATCH_DURATION : GAME_DURATION);
     setFloatingScores([]);
     setToasts([]);
@@ -532,8 +553,8 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
       <div className="min-h-screen min-w-full bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex flex-col items-center justify-center p-1">
         {/* Compact header - score and time only */}
         <div className="w-full max-w-[200px] flex justify-between items-center mb-2 px-1">
-          <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
-            {score}
+          <div className="text-2xl font-bold tabular-nums text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+            {displayScore}
           </div>
           <div className={`text-lg font-mono text-white ${timeLeft <= 10 ? 'text-red-400 animate-pulse' : ''}`}>
             {timeLeft}s
@@ -684,8 +705,8 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
           <span className="font-bold">{level + 1}</span>
         </div>
         <div className="text-center">
-          <div className={`text-3xl font-bold ${score >= config.targetScore ? 'text-red-400' : 'text-red-600'}`} style={{ textShadow: score >= config.targetScore ? '0 0 20px rgba(220,38,38,0.7)' : 'none' }}>
-            {score}<span className="text-lg text-gray-500">/{config.targetScore}</span>
+          <div className={`text-3xl font-bold tabular-nums ${score >= config.targetScore ? 'text-red-400' : 'text-red-600'}`} style={{ textShadow: score >= config.targetScore ? '0 0 20px rgba(220,38,38,0.7)' : 'none' }}>
+            {displayScore}<span className="text-lg text-gray-500">/{config.targetScore}</span>
           </div>
         </div>
         <div className="text-lg">

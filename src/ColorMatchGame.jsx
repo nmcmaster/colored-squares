@@ -30,14 +30,14 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
   const [isWatchMode, setIsWatchMode] = useState(false);
   const [toasts, setToasts] = useState([]);
 
-  // Toast messages based on match size
+  // Toast messages based on match size - Gothic/Metal themed
   const getMatchToast = (size) => {
     if (size <= 2) return null; // No toast for basic matches
-    if (size === 3) return { text: 'Nice!', style: 'normal' };
-    if (size === 4) return { text: 'Great match!', style: 'good' };
-    if (size === 5) return { text: 'Amazing!', style: 'great' };
-    if (size === 6) return { text: 'Incredible!', style: 'amazing' };
-    if (size >= 7) return { text: 'LEGENDARY!', style: 'legendary' };
+    if (size === 3) return { text: 'WICKED', style: 'normal' };
+    if (size === 4) return { text: 'UNHOLY', style: 'good' };
+    if (size === 5) return { text: 'CURSED', style: 'great' };
+    if (size === 6) return { text: 'DIABOLICAL', style: 'amazing' };
+    if (size >= 7) return { text: '☠ BLOOD RITE ☠', style: 'legendary' };
   };
 
   // Show a toast notification
@@ -326,7 +326,7 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
 
     // Show intro toast
     setTimeout(() => {
-      showToast('Tap matching colors!', 'intro', 2500);
+      showToast('SEEK THE BLOOD MATCH', 'intro', 2500);
     }, 300);
   };
 
@@ -521,13 +521,14 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
               <div
                 key={toast.id}
                 className={`
-                  px-4 py-2 rounded-xl font-bold animate-toast-in shadow-xl
-                  ${toast.style === 'intro' ? 'bg-blue-500 text-white text-base' : ''}
-                  ${toast.style === 'normal' ? 'bg-white text-gray-800 text-lg' : ''}
-                  ${toast.style === 'good' ? 'bg-green-500 text-white text-lg' : ''}
-                  ${toast.style === 'great' ? 'bg-yellow-400 text-black text-xl' : ''}
-                  ${toast.style === 'amazing' ? 'bg-orange-500 text-white text-xl animate-toast-pulse' : ''}
-                  ${toast.style === 'legendary' ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white text-2xl animate-toast-legendary' : ''}
+                  px-4 py-2 font-bold animate-toast-in uppercase tracking-wider
+                  border-2 gothic-toast
+                  ${toast.style === 'intro' ? 'bg-black/90 text-red-500 text-base border-red-900' : ''}
+                  ${toast.style === 'normal' ? 'bg-black/90 text-red-400 text-lg border-red-800' : ''}
+                  ${toast.style === 'good' ? 'bg-black/90 text-red-500 text-lg border-red-700' : ''}
+                  ${toast.style === 'great' ? 'bg-black/90 text-red-400 text-xl border-red-600 animate-toast-pulse' : ''}
+                  ${toast.style === 'amazing' ? 'bg-red-900/95 text-red-200 text-xl border-red-500 animate-toast-pulse' : ''}
+                  ${toast.style === 'legendary' ? 'bg-black text-red-500 text-2xl border-red-600 animate-toast-legendary gothic-legendary' : ''}
                 `}
               >
                 {toast.text}
@@ -581,12 +582,21 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
           }
           @keyframes toastLegendary {
             0%, 100% { transform: scale(1) rotate(-1deg); }
-            25% { transform: scale(1.1) rotate(1deg); }
-            50% { transform: scale(1.05) rotate(-1deg); }
-            75% { transform: scale(1.1) rotate(1deg); }
+            25% { transform: scale(1.15) rotate(2deg); }
+            50% { transform: scale(1.05) rotate(-2deg); }
+            75% { transform: scale(1.15) rotate(1deg); }
           }
           .animate-toast-legendary {
-            animation: toastIn 0.3s ease-out, toastLegendary 0.5s ease-in-out 0.3s infinite;
+            animation: toastIn 0.3s ease-out, toastLegendary 0.4s ease-in-out 0.3s infinite;
+          }
+          .gothic-toast {
+            font-family: 'Times New Roman', serif;
+            text-shadow: 0 0 10px rgba(220, 38, 38, 0.5), 0 0 20px rgba(220, 38, 38, 0.3);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(220, 38, 38, 0.1);
+          }
+          .gothic-legendary {
+            text-shadow: 0 0 10px #dc2626, 0 0 20px #dc2626, 0 0 40px #dc2626;
+            box-shadow: 0 0 30px rgba(220, 38, 38, 0.6), inset 0 0 30px rgba(220, 38, 38, 0.2);
           }
         `}</style>
       </div>
@@ -665,19 +675,20 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
         ← Menu
       </button>
 
-      {/* Toasts */}
+      {/* Toasts - Gothic style */}
       <div className="fixed top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none">
         {toasts.map(toast => (
           <div
             key={toast.id}
             className={`
-              px-5 py-2 rounded-xl text-lg font-bold shadow-lg animate-toast-in
-              ${toast.style === 'intro' ? 'bg-blue-500/90 text-white' : ''}
-              ${toast.style === 'normal' ? 'bg-white/90 text-gray-800' : ''}
-              ${toast.style === 'good' ? 'bg-green-500/90 text-white text-xl' : ''}
-              ${toast.style === 'great' ? 'bg-yellow-500/90 text-black text-xl' : ''}
-              ${toast.style === 'amazing' ? 'bg-orange-500/90 text-white text-2xl animate-toast-pulse' : ''}
-              ${toast.style === 'legendary' ? 'bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white text-3xl animate-toast-legendary' : ''}
+              px-6 py-3 font-bold animate-toast-in uppercase tracking-widest
+              border-2 gothic-toast
+              ${toast.style === 'intro' ? 'bg-black/95 text-red-500 text-lg border-red-900' : ''}
+              ${toast.style === 'normal' ? 'bg-black/95 text-red-400 text-xl border-red-800' : ''}
+              ${toast.style === 'good' ? 'bg-black/95 text-red-500 text-2xl border-red-700' : ''}
+              ${toast.style === 'great' ? 'bg-black/95 text-red-400 text-2xl border-red-600 animate-toast-pulse' : ''}
+              ${toast.style === 'amazing' ? 'bg-red-950/95 text-red-300 text-3xl border-red-500 animate-toast-pulse' : ''}
+              ${toast.style === 'legendary' ? 'bg-black text-red-500 text-4xl border-red-600 animate-toast-legendary gothic-legendary' : ''}
             `}
           >
             {toast.text}
@@ -730,12 +741,21 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
         }
         @keyframes toastLegendary {
           0%, 100% { transform: scale(1) rotate(-2deg); }
-          25% { transform: scale(1.15) rotate(2deg); }
-          50% { transform: scale(1.1) rotate(-2deg); }
-          75% { transform: scale(1.15) rotate(2deg); }
+          25% { transform: scale(1.2) rotate(3deg); }
+          50% { transform: scale(1.1) rotate(-3deg); }
+          75% { transform: scale(1.2) rotate(2deg); }
         }
         .animate-toast-legendary {
-          animation: toastIn 0.3s ease-out, toastLegendary 0.5s ease-in-out 0.3s infinite;
+          animation: toastIn 0.3s ease-out, toastLegendary 0.4s ease-in-out 0.3s infinite;
+        }
+        .gothic-toast {
+          font-family: 'Times New Roman', serif;
+          text-shadow: 0 0 10px rgba(220, 38, 38, 0.5), 0 0 20px rgba(220, 38, 38, 0.3);
+          box-shadow: 0 0 30px rgba(0, 0, 0, 0.9), inset 0 0 30px rgba(220, 38, 38, 0.1);
+        }
+        .gothic-legendary {
+          text-shadow: 0 0 15px #dc2626, 0 0 30px #dc2626, 0 0 60px #dc2626;
+          box-shadow: 0 0 40px rgba(220, 38, 38, 0.7), inset 0 0 40px rgba(220, 38, 38, 0.2);
         }
       `}</style>
     </div>

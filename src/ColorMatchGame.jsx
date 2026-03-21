@@ -12,6 +12,98 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
     { gridSize: 16, threshold: 15, morphSpeed: 0.020, targetScore: 50 },
   ];
 
+  // Dante's Inferno - Circles of Hell scene configuration
+  // Each level has 3 scene states based on score progress
+  const INFERNO_SCENES = [
+    {
+      circle: 'I',
+      name: 'Limbo',
+      subtitle: 'The Virtuous Pagans',
+      scenes: [
+        '/scenes/1-limbo-1.png',  // 0-33% of target
+        '/scenes/1-limbo-2.png',  // 33-66% of target
+        '/scenes/1-limbo-3.png',  // 66-100% of target
+      ],
+    },
+    {
+      circle: 'II',
+      name: 'Lust',
+      subtitle: 'The Carnal Sinners',
+      scenes: [
+        '/scenes/2-lust-1.png',
+        '/scenes/2-lust-2.png',
+        '/scenes/2-lust-3.png',
+      ],
+    },
+    {
+      circle: 'III',
+      name: 'Gluttony',
+      subtitle: 'The Cerberus Guard',
+      scenes: [
+        '/scenes/3-gluttony-1.png',
+        '/scenes/3-gluttony-2.png',
+        '/scenes/3-gluttony-3.png',
+      ],
+    },
+    {
+      circle: 'IV',
+      name: 'Greed',
+      subtitle: 'The Hoarders & Spenders',
+      scenes: [
+        '/scenes/4-greed-1.png',
+        '/scenes/4-greed-2.png',
+        '/scenes/4-greed-3.png',
+      ],
+    },
+    {
+      circle: 'V',
+      name: 'Wrath',
+      subtitle: 'The River Styx',
+      scenes: [
+        '/scenes/5-wrath-1.png',
+        '/scenes/5-wrath-2.png',
+        '/scenes/5-wrath-3.png',
+      ],
+    },
+    {
+      circle: 'VI',
+      name: 'Heresy',
+      subtitle: 'The Flaming Tombs',
+      scenes: [
+        '/scenes/6-heresy-1.png',
+        '/scenes/6-heresy-2.png',
+        '/scenes/6-heresy-3.png',
+      ],
+    },
+    {
+      circle: 'VII',
+      name: 'Violence',
+      subtitle: 'The River of Blood',
+      scenes: [
+        '/scenes/7-violence-1.png',
+        '/scenes/7-violence-2.png',
+        '/scenes/7-violence-3.png',
+      ],
+    },
+  ];
+
+  // Get current scene based on level and score progress
+  const getCurrentScene = () => {
+    const infernoLevel = INFERNO_SCENES[Math.min(level, INFERNO_SCENES.length - 1)];
+    const targetScore = LEVELS[level]?.targetScore || 1;
+    const progress = score / targetScore;
+
+    let sceneIndex = 0;
+    if (progress >= 0.66) sceneIndex = 2;
+    else if (progress >= 0.33) sceneIndex = 1;
+
+    return {
+      ...infernoLevel,
+      currentScene: infernoLevel.scenes[sceneIndex],
+      sceneIndex,
+    };
+  };
+
   // Watch mode config - 3x3 grid, slightly generous threshold, 30 second rounds
   const WATCH_CONFIG = { gridSize: 3, threshold: 40, morphSpeed: 0.006 };
   const WATCH_DURATION = 30; // seconds
@@ -760,13 +852,16 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   if (squaresRef.current.length === 0) {
     return <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900" />;
   }
+
+  const infernoScene = getCurrentScene();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex flex-col">
       {/* Header */}
-      <div className="w-full max-w-lg flex justify-between items-center mb-4 text-white">
+      <div className="w-full flex justify-between items-center p-4 text-white">
         <div className="text-lg">
-          <span className="text-gray-400">Circle</span>{' '}
-          <span className="font-bold">{level + 1}</span>
+          <span className="text-red-700 font-serif italic">Circle {infernoScene.circle}</span>{' '}
+          <span className="font-bold text-red-500" style={{ fontFamily: 'Times New Roman, serif' }}>{infernoScene.name}</span>
         </div>
         <div className="text-center relative">
           {displayScore < score && (
@@ -792,58 +887,100 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
         </div>
       </div>
 
-      {/* Game Grid */}
-      <div className="relative">
-        <div
-          ref={gridRef}
-          className="grid gap-1 p-2 bg-black/30 rounded-xl backdrop-blur-sm"
-          style={{
-            gridTemplateColumns: `repeat(${config.gridSize}, 1fr)`,
-            width: `min(90vw, 500px)`,
-            height: `min(90vw, 500px)`,
-          }}
-        >
-          {squaresRef.current.map((square, index) => (
-            <button
-              key={square.id}
-              onClick={() => handleSquareClick(index)}
-              className={`
-                rounded-md transition-all duration-150 cursor-pointer
-                hover:scale-105 hover:z-10
-                ${matchingSquaresRef.current.has(index) ? 'animate-ping opacity-0' : ''}
-                ${invalidSquareRef.current === index ? 'animate-shake' : ''}
-              `}
+      {/* Main content - split layout on desktop */}
+      <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-4 p-4">
+        {/* Game Grid - left side on desktop */}
+        <div className="relative flex-shrink-0">
+          <div
+            ref={gridRef}
+            className="grid gap-1 p-2 bg-black/30 rounded-xl backdrop-blur-sm"
+            style={{
+              gridTemplateColumns: `repeat(${config.gridSize}, 1fr)`,
+              width: `min(90vw, 400px)`,
+              height: `min(90vw, 400px)`,
+            }}
+          >
+            {squaresRef.current.map((square, index) => (
+              <button
+                key={square.id}
+                onClick={() => handleSquareClick(index)}
+                className={`
+                  rounded-md transition-all duration-150 cursor-pointer
+                  hover:scale-105 hover:z-10
+                  ${matchingSquaresRef.current.has(index) ? 'animate-ping opacity-0' : ''}
+                  ${invalidSquareRef.current === index ? 'animate-shake' : ''}
+                `}
+                style={{
+                  backgroundColor: hslToString(square.color),
+                  aspectRatio: '1',
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Floating scores */}
+          {floatingScores.map(float => (
+            <div
+              key={float.id}
+              className="absolute pointer-events-none text-2xl font-bold text-yellow-400 animate-float"
               style={{
-                backgroundColor: hslToString(square.color),
-                aspectRatio: '1',
+                left: float.x,
+                top: float.y,
+                transform: 'translate(-50%, -50%)',
               }}
-            />
+            >
+              +{float.points}
+            </div>
           ))}
         </div>
 
-        {/* Floating scores */}
-        {floatingScores.map(float => (
-          <div
-            key={float.id}
-            className="absolute pointer-events-none text-2xl font-bold text-yellow-400 animate-float"
-            style={{
-              left: float.x,
-              top: float.y,
-              transform: 'translate(-50%, -50%)',
-            }}
-          >
-            +{float.points}
+        {/* Inferno Illustration - right side on desktop, hidden on mobile */}
+        <div className="hidden md:flex flex-col items-center justify-center flex-1 max-w-lg">
+          <div className="relative w-full aspect-[3/4] bg-black/40 rounded-xl overflow-hidden border border-red-900/50">
+            {/* Scene image */}
+            <img
+              src={infernoScene.currentScene}
+              alt={`${infernoScene.name} - Scene ${infernoScene.sceneIndex + 1}`}
+              className="w-full h-full object-cover transition-opacity duration-700"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+            {/* Fallback/overlay when no image */}
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-gradient-to-b from-black/60 via-transparent to-black/80">
+              <div className="text-red-800 text-6xl font-serif mb-4" style={{ fontFamily: 'Times New Roman, serif' }}>
+                {infernoScene.circle}
+              </div>
+              <div className="text-red-500 text-2xl font-bold uppercase tracking-widest" style={{ fontFamily: 'Times New Roman, serif' }}>
+                {infernoScene.name}
+              </div>
+              <div className="text-red-700/70 text-sm mt-2 italic">
+                {infernoScene.subtitle}
+              </div>
+              <div className="mt-8 flex gap-2">
+                {[0, 1, 2].map(i => (
+                  <div
+                    key={i}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      i <= infernoScene.sceneIndex ? 'bg-red-500 shadow-lg shadow-red-500/50' : 'bg-red-900/50'
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
-        ))}
+        </div>
       </div>
 
       {/* Pause button */}
-      <button
-        onClick={() => setGameState('menu')}
-        className="mt-4 px-6 py-2 text-gray-400 hover:text-white transition-colors"
-      >
-        ← Menu
-      </button>
+      <div className="p-4 text-center">
+        <button
+          onClick={() => setGameState('menu')}
+          className="px-6 py-2 text-gray-500 hover:text-red-400 transition-colors text-sm"
+        >
+          ← Abandon Hope
+        </button>
+      </div>
 
       {/* Toasts - Gothic style */}
       <div className="fixed top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none">

@@ -63,12 +63,24 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
     return LEVELS[Math.min(level, LEVELS.length - 1)];
   }, [level, isWatchMode]);
 
-  // HSL utilities
-  const randomHSL = () => ({
-    h: Math.random() * 360,
-    s: 40 + Math.random() * 40, // 40-80% saturation
-    l: 35 + Math.random() * 30, // 35-65% lightness
-  });
+  // HSL utilities - Gothic palette
+  const GOTHIC_HUES = [
+    () => Math.random() * 25,           // Blood reds (0-25)
+    () => 335 + Math.random() * 25,     // Crimsons (335-360)
+    () => 270 + Math.random() * 40,     // Deathly purples (270-310)
+    () => 200 + Math.random() * 40,     // Midnight blues (200-240)
+    () => 100 + Math.random() * 40,     // Sickly greens (100-140)
+    () => 30 + Math.random() * 20,      // Dried blood oranges (30-50)
+  ];
+
+  const randomHSL = () => {
+    const hueGenerator = GOTHIC_HUES[Math.floor(Math.random() * GOTHIC_HUES.length)];
+    return {
+      h: hueGenerator(),
+      s: 50 + Math.random() * 40,       // 50-90% saturation (vivid)
+      l: 20 + Math.random() * 25,       // 20-45% lightness (dark)
+    };
+  };
 
   const hslToString = (hsl) => `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
 

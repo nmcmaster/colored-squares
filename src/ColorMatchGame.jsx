@@ -983,19 +983,19 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
       </div>
 
       {/* Toasts - Gothic style */}
-      <div className="fixed top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none">
+      <div className="fixed top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none px-4">
         {toasts.map(toast => (
           <div
             key={toast.id}
             className={`
-              px-6 py-3 font-bold animate-toast-in uppercase tracking-widest
-              border-2 gothic-toast
-              ${toast.style === 'intro' ? 'bg-black/95 text-red-500 text-lg border-red-900' : ''}
-              ${toast.style === 'normal' ? 'bg-black/95 text-red-400 text-xl border-red-800' : ''}
-              ${toast.style === 'good' ? 'bg-black/95 text-red-500 text-2xl border-red-700' : ''}
-              ${toast.style === 'great' ? 'bg-black/95 text-red-400 text-2xl border-red-600 animate-toast-pulse' : ''}
-              ${toast.style === 'amazing' ? 'bg-red-950/95 text-red-300 text-3xl border-red-500 animate-toast-pulse' : ''}
-              ${toast.style === 'legendary' ? 'bg-black text-red-500 text-4xl border-red-600 animate-toast-legendary gothic-legendary' : ''}
+              px-4 py-2 md:px-6 md:py-3 font-bold animate-toast-in uppercase tracking-wider md:tracking-widest
+              border-2 gothic-toast whitespace-nowrap
+              ${toast.style === 'intro' ? 'bg-black/95 text-red-500 text-base md:text-lg border-red-900' : ''}
+              ${toast.style === 'normal' ? 'bg-black/95 text-red-400 text-lg md:text-xl border-red-800' : ''}
+              ${toast.style === 'good' ? 'bg-black/95 text-red-500 text-xl md:text-2xl border-red-700' : ''}
+              ${toast.style === 'great' ? 'bg-black/95 text-red-400 text-xl md:text-2xl border-red-600 animate-toast-pulse' : ''}
+              ${toast.style === 'amazing' ? 'bg-red-950/95 text-red-300 text-2xl md:text-3xl border-red-500 animate-toast-pulse' : ''}
+              ${toast.style === 'legendary' ? 'bg-black text-red-500 text-3xl md:text-4xl border-red-600 animate-toast-legendary gothic-legendary' : ''}
             `}
           >
             {toast.text}

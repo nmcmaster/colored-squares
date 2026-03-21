@@ -8,8 +8,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<ColorMatchGame />} />
+        <Route path="/" element={<ColorMatchGame autoStartLevel={0} />} />
         <Route path="/watch" element={<ColorMatchGame autoStartWatch />} />
+        <Route path="/admin" element={<ColorMatchGame />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>,

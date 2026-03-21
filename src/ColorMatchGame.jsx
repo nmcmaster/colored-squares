@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
-const ColorMatchGame = ({ autoStartWatch = false }) => {
+const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   // Game configuration
   const LEVELS = [
     { gridSize: 4, threshold: 35, morphSpeed: 0.008 },
@@ -342,10 +342,12 @@ const ColorMatchGame = ({ autoStartWatch = false }) => {
     }, 300);
   };
 
-  // Auto-start watch mode if prop is set
+  // Auto-start if props are set
   useEffect(() => {
     if (autoStartWatch) {
       startGame(0, true);
+    } else if (autoStartLevel !== null) {
+      startGame(autoStartLevel, false);
     }
   }, []);
 

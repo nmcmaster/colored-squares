@@ -1,0 +1,606 @@
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+
+const ColorMatchGame = () => {
+  // Game configuration
+  const LEVELS = [
+    { gridSize: 4, threshold: 35, morphSpeed: 0.008 },
+    { gridSize: 6, threshold: 30, morphSpeed: 0.010 },
+    { gridSize: 8, threshold: 28, morphSpeed: 0.012 },
+    { gridSize: 10, threshold: 25, morphSpeed: 0.014 },
+    { gridSize: 12, threshold: 22, morphSpeed: 0.016 },
+    { gridSize: 14, threshold: 18, morphSpeed: 0.018 },
+    { gridSize: 16, threshold: 15, morphSpeed: 0.020 },
+  ];
+
+  // Watch mode config - 3x3 grid, slightly generous threshold, 30 second rounds
+  const WATCH_CONFIG = { gridSize: 3, threshold: 40, morphSpeed: 0.006 };
+  const WATCH_DURATION = 30; // seconds
+
+  const GAME_DURATION = 60; // seconds
+  const HUE_WEIGHT = 1.5;
+  const SAT_WEIGHT = 1.0;
+  const LIGHT_WEIGHT = 1.0;
+
+  // Game state (triggers re-renders)
+  const [gameState, setGameState] = useState('menu'); // 'menu', 'playing', 'paused', 'gameover'
+  const [level, setLevel] = useState(0);
+  const [score, setScore] = useState(0);
+  const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
+  const [floatingScores, setFloatingScores] = useState([]);
+  const [isWatchMode, setIsWatchMode] = useState(false);
+
+  // Mutable game state (refs for animation loop)
+  const squaresRef = useRef([]);
+  const animationFrameRef = useRef(null);
+  const lastTimeRef = useRef(0);
+  const gridRef = useRef(null);
+  const matchingSquaresRef = useRef(new Set());
+  const invalidSquareRef = useRef(null);
+
+  // Get current level config
+  const getLevelConfig = useCallback(() => {
+    if (isWatchMode) return WATCH_CONFIG;
+    return LEVELS[Math.min(level, LEVELS.length - 1)];
+  }, [level, isWatchMode]);
+
+  // HSL utilities
+  const randomHSL = () => ({
+    h: Math.random() * 360,
+    s: 40 + Math.random() * 40, // 40-80% saturation
+    l: 35 + Math.random() * 30, // 35-65% lightness
+  });
+
+  const hslToString = (hsl) => `hsl(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+
+  const lerpHSL = (current, target, t) => {
+    // Handle hue wrapping
+    let dH = target.h - current.h;
+    if (dH > 180) dH -= 360;
+    if (dH < -180) dH += 360;
+
+    return {
+      h: (current.h + dH * t + 360) % 360,
+      s: current.s + (target.s - current.s) * t,
+      l: current.l + (target.l - current.l) * t,
+    };
+  };
+
+  const colorDistance = (c1, c2) => {
+    // Hue distance with wrapping
+    let dH = Math.abs(c1.h - c2.h);
+    if (dH > 180) dH = 360 - dH;
+
+    const dS = Math.abs(c1.s - c2.s);
+    const dL = Math.abs(c1.l - c2.l);
+
+    return Math.sqrt(
+      HUE_WEIGHT * dH * dH +
+      SAT_WEIGHT * dS * dS +
+      LIGHT_WEIGHT * dL * dL
+    );
+  };
+
+  // Initialize grid
+  const initializeGrid = useCallback(() => {
+    const config = getLevelConfig();
+    const size = config.gridSize;
+    const squares = [];
+
+    for (let i = 0; i < size * size; i++) {
+      squares.push({
+        id: i,
+        color: randomHSL(),
+        target: randomHSL(),
+        state: 'active', // 'active', 'matching', 'invalid'
+      });
+    }
+
+    squaresRef.current = squares;
+    matchingSquaresRef.current = new Set();
+    invalidSquareRef.current = null;
+  }, [getLevelConfig]);
+
+  // Get adjacent indices
+  const getAdjacentIndices = useCallback((index) => {
+    const config = getLevelConfig();
+    const size = config.gridSize;
+    const row = Math.floor(index / size);
+    const col = index % size;
+    const adjacent = [];
+
+    if (row > 0) adjacent.push(index - size); // up
+    if (row < size - 1) adjacent.push(index + size); // down
+    if (col > 0) adjacent.push(index - 1); // left
+    if (col < size - 1) adjacent.push(index + 1); // right
+
+    return adjacent;
+  }, [getLevelConfig]);
+
+  // Find all matching connected squares (flood-fill based on color similarity)
+  const findMatchingCluster = useCallback((startIndex) => {
+    const config = getLevelConfig();
+    const squares = squaresRef.current;
+    const startSquare = squares[startIndex];
+
+    if (!startSquare || startSquare.state !== 'active') return new Set();
+
+    const cluster = new Set([startIndex]);
+    const toCheck = [startIndex];
+
+    while (toCheck.length > 0) {
+      const currentIndex = toCheck.pop();
+      const currentSquare = squares[currentIndex];
+      const adjacent = getAdjacentIndices(currentIndex);
+
+      for (const adjIndex of adjacent) {
+        if (cluster.has(adjIndex)) continue; // Already in cluster
+
+        const adjSquare = squares[adjIndex];
+        if (adjSquare && adjSquare.state === 'active') {
+          // Check if adjacent square matches the current square's color
+          const distance = colorDistance(currentSquare.color, adjSquare.color);
+          if (distance < config.threshold) {
+            cluster.add(adjIndex);
+            toCheck.push(adjIndex);
+          }
+        }
+      }
+    }
+
+    // Only return cluster if it has at least 2 squares (a valid match)
+    return cluster.size >= 2 ? cluster : new Set();
+  }, [getLevelConfig, getAdjacentIndices]);
+
+  // Handle square click
+  const handleSquareClick = useCallback((index) => {
+    if (gameState !== 'playing') return;
+
+    const cluster = findMatchingCluster(index);
+
+    if (cluster.size >= 2) {
+      // Valid match - mark all squares in cluster as matching
+      const squares = squaresRef.current;
+      const clusterArray = Array.from(cluster);
+
+      for (const idx of clusterArray) {
+        squares[idx].state = 'matching';
+        matchingSquaresRef.current.add(idx);
+      }
+
+      // Calculate position for floating score (center of cluster)
+      const config = getLevelConfig();
+      const gridElement = gridRef.current;
+      if (gridElement) {
+        const rect = gridElement.getBoundingClientRect();
+        const squareSize = rect.width / config.gridSize;
+
+        // Find center of cluster
+        let sumX = 0, sumY = 0;
+        for (const idx of clusterArray) {
+          const row = Math.floor(idx / config.gridSize);
+          const col = idx % config.gridSize;
+          sumX += col * squareSize + squareSize / 2;
+          sumY += row * squareSize + squareSize / 2;
+        }
+        const x = sumX / clusterArray.length;
+        const y = sumY / clusterArray.length;
+
+        const floatId = Date.now();
+        const points = clusterArray.length; // Score = number of squares matched
+        setFloatingScores(prev => [...prev, { id: floatId, x, y, points }]);
+        setTimeout(() => {
+          setFloatingScores(prev => prev.filter(f => f.id !== floatId));
+        }, 800);
+      }
+
+      // Score = number of squares in the cluster
+      setScore(prev => prev + clusterArray.length);
+
+      // After animation, replace all squares in cluster
+      setTimeout(() => {
+        const squares = squaresRef.current;
+        for (const idx of clusterArray) {
+          if (squares[idx]) {
+            squares[idx] = {
+              id: idx,
+              color: randomHSL(),
+              target: randomHSL(),
+              state: 'active',
+            };
+          }
+          matchingSquaresRef.current.delete(idx);
+        }
+      }, 300);
+    } else {
+      // Invalid tap - shake feedback
+      invalidSquareRef.current = index;
+      setTimeout(() => {
+        invalidSquareRef.current = null;
+      }, 300);
+    }
+  }, [gameState, findMatchingCluster, getLevelConfig]);
+
+  // Game loop
+  const gameLoop = useCallback((timestamp) => {
+    if (gameState !== 'playing') return;
+
+    const config = getLevelConfig();
+    const deltaTime = timestamp - lastTimeRef.current;
+    lastTimeRef.current = timestamp;
+
+    // Update colors
+    const squares = squaresRef.current;
+    const gridElement = gridRef.current;
+
+    if (gridElement) {
+      const squareElements = gridElement.children;
+
+      for (let i = 0; i < squares.length; i++) {
+        const square = squares[i];
+        if (square.state !== 'active') continue;
+
+        // Lerp toward target
+        square.color = lerpHSL(square.color, square.target, config.morphSpeed);
+
+        // Check if close to target, pick new target
+        if (colorDistance(square.color, square.target) < 5) {
+          square.target = randomHSL();
+        }
+
+        // Update DOM directly for performance
+        if (squareElements[i]) {
+          squareElements[i].style.backgroundColor = hslToString(square.color);
+        }
+      }
+    }
+
+    animationFrameRef.current = requestAnimationFrame(gameLoop);
+  }, [gameState, getLevelConfig]);
+
+  // Timer effect
+  useEffect(() => {
+    if (gameState !== 'playing') return;
+
+    const timer = setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          setGameState('gameover');
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [gameState]);
+
+  // Animation loop effect
+  useEffect(() => {
+    if (gameState === 'playing') {
+      lastTimeRef.current = performance.now();
+      animationFrameRef.current = requestAnimationFrame(gameLoop);
+    }
+
+    return () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [gameState, gameLoop]);
+
+  // Start game
+  const startGame = (selectedLevel = 0, watchMode = false) => {
+    setIsWatchMode(watchMode);
+    setLevel(selectedLevel);
+    setScore(0);
+    setTimeLeft(watchMode ? WATCH_DURATION : GAME_DURATION);
+    setFloatingScores([]);
+    setGameState('playing');
+  };
+
+  // Initialize grid when level changes or game starts
+  useEffect(() => {
+    if (gameState === 'playing') {
+      initializeGrid();
+    }
+  }, [gameState, level, initializeGrid]);
+
+  // Next level
+  const nextLevel = () => {
+    if (level < LEVELS.length - 1) {
+      setLevel(prev => prev + 1);
+      setTimeLeft(GAME_DURATION);
+      setGameState('playing');
+    }
+  };
+
+  const config = getLevelConfig();
+
+  // Render menu
+  if (gameState === 'menu') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center p-4">
+        <div className="text-center">
+          <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
+            Color Match
+          </h1>
+          <p className="text-gray-300 mb-8 max-w-md mx-auto">
+            Tap squares that match in color with their neighbors. The closer the colors, the better!
+          </p>
+          <div className="space-y-3">
+            {/* Watch Mode - prominent at top */}
+            <button
+              onClick={() => startGame(0, true)}
+              className="block w-full px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white rounded-lg transition-all duration-200 font-semibold"
+            >
+              ⌚ Watch Mode — 3×3 Grid
+            </button>
+
+            <div className="text-gray-500 text-sm py-2">— or play standard —</div>
+
+            {LEVELS.slice(0, 5).map((lvl, i) => (
+              <button
+                key={i}
+                onClick={() => startGame(i, false)}
+                className="block w-full px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200 backdrop-blur-sm border border-white/20"
+              >
+                Level {i + 1} — {lvl.gridSize}×{lvl.gridSize} Grid
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render game over - watch mode version
+  if (gameState === 'gameover' && isWatchMode) {
+    return (
+      <div className="min-h-screen min-w-full bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex items-center justify-center p-2">
+        <div className="text-center w-full max-w-[200px]">
+          <p className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 mb-1">
+            {score}
+          </p>
+          <p className="text-gray-400 text-sm mb-4">matches</p>
+          <button
+            onClick={() => startGame(0, true)}
+            className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg text-lg font-semibold active:scale-95 transition-transform"
+          >
+            Again
+          </button>
+          <button
+            onClick={() => setGameState('menu')}
+            className="w-full py-2 mt-2 text-gray-500 text-sm"
+          >
+            Menu
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Render game over - standard version
+  if (gameState === 'gameover') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center p-4">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-white mb-2">Time's Up!</h1>
+          <p className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">
+            {score}
+          </p>
+          <p className="text-gray-300 mb-8">matches found</p>
+          <div className="space-y-3">
+            <button
+              onClick={() => startGame(level, false)}
+              className="block w-full px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200 backdrop-blur-sm border border-white/20"
+            >
+              Play Again
+            </button>
+            {level < LEVELS.length - 1 && (
+              <button
+                onClick={nextLevel}
+                className="block w-full px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg transition-all duration-200"
+              >
+                Next Level →
+              </button>
+            )}
+            <button
+              onClick={() => setGameState('menu')}
+              className="block w-full px-8 py-3 text-gray-400 hover:text-white transition-colors"
+            >
+              Back to Menu
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render game - Watch Mode (minimal UI for tiny screens)
+  if (isWatchMode) {
+    return (
+      <div className="min-h-screen min-w-full bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex flex-col items-center justify-center p-1">
+        {/* Compact header - score and time only */}
+        <div className="w-full max-w-[200px] flex justify-between items-center mb-2 px-1">
+          <div className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+            {score}
+          </div>
+          <div className={`text-lg font-mono text-white ${timeLeft <= 10 ? 'text-red-400 animate-pulse' : ''}`}>
+            {timeLeft}s
+          </div>
+        </div>
+
+        {/* Game Grid - optimized for watch */}
+        <div className="relative">
+          <div
+            ref={gridRef}
+            className="grid gap-1 p-1 bg-black/40 rounded-lg"
+            style={{
+              gridTemplateColumns: `repeat(${config.gridSize}, 1fr)`,
+              width: `min(95vw, 180px)`,
+              height: `min(95vw, 180px)`,
+            }}
+          >
+            {squaresRef.current.map((square, index) => (
+              <button
+                key={square.id}
+                onClick={() => handleSquareClick(index)}
+                className={`
+                  rounded-md transition-all duration-100 cursor-pointer
+                  active:scale-90
+                  ${matchingSquaresRef.current.has(index) ? 'animate-ping opacity-0' : ''}
+                  ${invalidSquareRef.current === index ? 'animate-shake' : ''}
+                `}
+                style={{
+                  backgroundColor: hslToString(square.color),
+                  aspectRatio: '1',
+                }}
+              />
+            ))}
+          </div>
+
+          {/* Floating scores - smaller for watch */}
+          {floatingScores.map(float => (
+            <div
+              key={float.id}
+              className="absolute pointer-events-none text-lg font-bold text-cyan-400 animate-float"
+              style={{
+                left: float.x,
+                top: float.y,
+                transform: 'translate(-50%, -50%)',
+              }}
+            >
+              +{float.points}
+            </div>
+          ))}
+        </div>
+
+        {/* Custom animations */}
+        <style>{`
+          @keyframes float {
+            0% {
+              opacity: 1;
+              transform: translate(-50%, -50%) scale(1);
+            }
+            100% {
+              opacity: 0;
+              transform: translate(-50%, -100%) scale(1.2);
+            }
+          }
+          .animate-float {
+            animation: float 0.5s ease-out forwards;
+          }
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-3px); }
+            75% { transform: translateX(3px); }
+          }
+          .animate-shake {
+            animation: shake 0.2s ease-in-out;
+          }
+        `}</style>
+      </div>
+    );
+  }
+
+  // Render game - Standard Mode
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex flex-col items-center justify-center p-4">
+      {/* Header */}
+      <div className="w-full max-w-lg flex justify-between items-center mb-4 text-white">
+        <div className="text-lg">
+          <span className="text-gray-400">Level</span>{' '}
+          <span className="font-bold">{level + 1}</span>
+        </div>
+        <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
+          {score}
+        </div>
+        <div className="text-lg">
+          <span className={`font-mono ${timeLeft <= 10 ? 'text-red-400 animate-pulse' : ''}`}>
+            {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+          </span>
+        </div>
+      </div>
+
+      {/* Game Grid */}
+      <div className="relative">
+        <div
+          ref={gridRef}
+          className="grid gap-1 p-2 bg-black/30 rounded-xl backdrop-blur-sm"
+          style={{
+            gridTemplateColumns: `repeat(${config.gridSize}, 1fr)`,
+            width: `min(90vw, 500px)`,
+            height: `min(90vw, 500px)`,
+          }}
+        >
+          {squaresRef.current.map((square, index) => (
+            <button
+              key={square.id}
+              onClick={() => handleSquareClick(index)}
+              className={`
+                rounded-md transition-all duration-150 cursor-pointer
+                hover:scale-105 hover:z-10
+                ${matchingSquaresRef.current.has(index) ? 'animate-ping opacity-0' : ''}
+                ${invalidSquareRef.current === index ? 'animate-shake' : ''}
+              `}
+              style={{
+                backgroundColor: hslToString(square.color),
+                aspectRatio: '1',
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Floating scores */}
+        {floatingScores.map(float => (
+          <div
+            key={float.id}
+            className="absolute pointer-events-none text-2xl font-bold text-yellow-400 animate-float"
+            style={{
+              left: float.x,
+              top: float.y,
+              transform: 'translate(-50%, -50%)',
+            }}
+          >
+            +{float.points}
+          </div>
+        ))}
+      </div>
+
+      {/* Pause button */}
+      <button
+        onClick={() => setGameState('menu')}
+        className="mt-4 px-6 py-2 text-gray-400 hover:text-white transition-colors"
+      >
+        ← Menu
+      </button>
+
+      {/* Custom animations */}
+      <style>{`
+        @keyframes float {
+          0% {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+          }
+          100% {
+            opacity: 0;
+            transform: translate(-50%, -150%) scale(1.5);
+          }
+        }
+        .animate-float {
+          animation: float 0.8s ease-out forwards;
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25% { transform: translateX(-4px); }
+          75% { transform: translateX(4px); }
+        }
+        .animate-shake {
+          animation: shake 0.3s ease-in-out;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default ColorMatchGame;

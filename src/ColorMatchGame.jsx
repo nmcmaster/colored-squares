@@ -553,7 +553,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
       <div className="min-h-screen min-w-full bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex flex-col items-center justify-center p-1">
         {/* Compact header - score and time only */}
         <div className="w-full max-w-[200px] flex justify-between items-center mb-2 px-1">
-          <div className="text-2xl font-bold tabular-nums text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">
+          <div className={`text-2xl font-bold tabular-nums ${displayScore < score ? 'flame-text' : 'text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400'}`}>
             {displayScore}
           </div>
           <div className={`text-lg font-mono text-white ${timeLeft <= 10 ? 'text-red-400 animate-pulse' : ''}`}>
@@ -690,6 +690,31 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
             text-shadow: 0 0 10px #dc2626, 0 0 20px #dc2626, 0 0 40px #dc2626;
             box-shadow: 0 0 30px rgba(220, 38, 38, 0.6), inset 0 0 30px rgba(220, 38, 38, 0.2);
           }
+          @keyframes flame {
+            0%, 100% {
+              text-shadow: 0 0 10px #ff4500, 0 0 20px #ff4500, 0 0 30px #ff0000, 0 0 40px #ff0000;
+              transform: scale(1);
+            }
+            25% {
+              text-shadow: 0 0 15px #ff6600, 0 0 25px #ff4500, 0 0 35px #ff0000, 0 0 50px #ff0000, 0 -5px 30px #ffff00;
+              transform: scale(1.05);
+            }
+            50% {
+              text-shadow: 0 0 10px #ff4500, 0 0 20px #ff0000, 0 0 40px #ff0000, 0 0 60px #cc0000;
+              transform: scale(1.02);
+            }
+            75% {
+              text-shadow: 0 0 15px #ff6600, 0 0 30px #ff4500, 0 0 45px #ff0000, 0 -8px 35px #ffff00;
+              transform: scale(1.06);
+            }
+          }
+          .flame-text {
+            animation: flame 0.15s ease-in-out infinite;
+            color: #ff4500 !important;
+            background: linear-gradient(to top, #ff0000, #ff4500, #ff6600, #ffcc00);
+            -webkit-background-clip: text;
+            background-clip: text;
+          }
         `}</style>
       </div>
     );
@@ -705,7 +730,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
           <span className="font-bold">{level + 1}</span>
         </div>
         <div className="text-center">
-          <div className={`text-3xl font-bold tabular-nums ${score >= config.targetScore ? 'text-red-400' : 'text-red-600'}`} style={{ textShadow: score >= config.targetScore ? '0 0 20px rgba(220,38,38,0.7)' : 'none' }}>
+          <div className={`text-3xl font-bold tabular-nums ${displayScore < score ? 'flame-text' : ''} ${score >= config.targetScore ? 'text-red-400' : 'text-red-600'}`} style={{ textShadow: score >= config.targetScore ? '0 0 20px rgba(220,38,38,0.7)' : 'none' }}>
             {displayScore}<span className="text-lg text-gray-500">/{config.targetScore}</span>
           </div>
         </div>
@@ -850,6 +875,31 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
         .gothic-legendary {
           text-shadow: 0 0 15px #dc2626, 0 0 30px #dc2626, 0 0 60px #dc2626;
           box-shadow: 0 0 40px rgba(220, 38, 38, 0.7), inset 0 0 40px rgba(220, 38, 38, 0.2);
+        }
+        @keyframes flame {
+          0%, 100% {
+            text-shadow: 0 0 10px #ff4500, 0 0 20px #ff4500, 0 0 30px #ff0000, 0 0 40px #ff0000;
+            transform: scale(1);
+          }
+          25% {
+            text-shadow: 0 0 20px #ff6600, 0 0 30px #ff4500, 0 0 40px #ff0000, 0 0 60px #ff0000, 0 -8px 40px #ffff00;
+            transform: scale(1.08);
+          }
+          50% {
+            text-shadow: 0 0 15px #ff4500, 0 0 25px #ff0000, 0 0 50px #ff0000, 0 0 70px #cc0000;
+            transform: scale(1.04);
+          }
+          75% {
+            text-shadow: 0 0 20px #ff6600, 0 0 35px #ff4500, 0 0 55px #ff0000, 0 -10px 45px #ffff00;
+            transform: scale(1.1);
+          }
+        }
+        .flame-text {
+          animation: flame 0.12s ease-in-out infinite;
+          color: #ff4500 !important;
+          background: linear-gradient(to top, #ff0000, #ff4500, #ff6600, #ffcc00);
+          -webkit-background-clip: text;
+          background-clip: text;
         }
       `}</style>
     </div>

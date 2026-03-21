@@ -1,15 +1,15 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
 const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
-  // Game configuration
+  // Game configuration - targetScore is required to advance
   const LEVELS = [
-    { gridSize: 4, threshold: 35, morphSpeed: 0.008 },
-    { gridSize: 6, threshold: 30, morphSpeed: 0.010 },
-    { gridSize: 8, threshold: 28, morphSpeed: 0.012 },
-    { gridSize: 10, threshold: 25, morphSpeed: 0.014 },
-    { gridSize: 12, threshold: 22, morphSpeed: 0.016 },
-    { gridSize: 14, threshold: 18, morphSpeed: 0.018 },
-    { gridSize: 16, threshold: 15, morphSpeed: 0.020 },
+    { gridSize: 4, threshold: 35, morphSpeed: 0.008, targetScore: 15 },
+    { gridSize: 6, threshold: 30, morphSpeed: 0.010, targetScore: 20 },
+    { gridSize: 8, threshold: 28, morphSpeed: 0.012, targetScore: 25 },
+    { gridSize: 10, threshold: 25, morphSpeed: 0.014, targetScore: 30 },
+    { gridSize: 12, threshold: 22, morphSpeed: 0.016, targetScore: 35 },
+    { gridSize: 14, threshold: 18, morphSpeed: 0.018, targetScore: 40 },
+    { gridSize: 16, threshold: 15, morphSpeed: 0.020, targetScore: 50 },
   ];
 
   // Watch mode config - 3x3 grid, slightly generous threshold, 30 second rounds
@@ -22,7 +22,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   const LIGHT_WEIGHT = 1.0;
 
   // Game state (triggers re-renders)
-  const [gameState, setGameState] = useState('menu'); // 'menu', 'playing', 'paused', 'gameover'
+  const [gameState, setGameState] = useState('menu'); // 'menu', 'playing', 'levelComplete', 'gameover'
   const [level, setLevel] = useState(0);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(GAME_DURATION);
@@ -57,6 +57,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   const matchingSquaresRef = useRef(new Set());
   const invalidSquareRef = useRef(null);
   const hasAutoStartedRef = useRef(false);
+  const scoreRef = useRef(0);
 
   // Get current level config
   const getLevelConfig = useCallback(() => {
@@ -296,14 +297,25 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
     animationFrameRef.current = requestAnimationFrame(gameLoop);
   }, [gameState, getLevelConfig]);
 
+  // Keep scoreRef in sync with score state
+  useEffect(() => {
+    scoreRef.current = score;
+  }, [score]);
+
   // Timer effect
   useEffect(() => {
     if (gameState !== 'playing') return;
 
+    const config = getLevelConfig();
     const timer = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          setGameState('gameover');
+          // Check if player met the target score (not for watch mode)
+          if (!isWatchMode && config.targetScore && scoreRef.current >= config.targetScore) {
+            setGameState('levelComplete');
+          } else {
+            setGameState('gameover');
+          }
           return 0;
         }
         return prev - 1;
@@ -311,7 +323,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [gameState]);
+  }, [gameState, getLevelConfig, isWatchMode]);
 
   // Animation loop effect
   useEffect(() => {
@@ -437,36 +449,76 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
     );
   }
 
-  // Render game over - standard version
+  // Render game over - standard version (failed to reach target)
   if (gameState === 'gameover') {
+    const targetScore = LEVELS[level]?.targetScore || 0;
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-950 to-gray-900 flex items-center justify-center p-4">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-white mb-2">Time's Up!</h1>
-          <p className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500 mb-2">
+          <h1 className="text-4xl font-bold text-red-500 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Times New Roman, serif', textShadow: '0 0 20px rgba(220,38,38,0.5)' }}>
+            Fallen
+          </h1>
+          <p className="text-6xl font-bold text-red-400 mb-2" style={{ textShadow: '0 0 30px rgba(220,38,38,0.5)' }}>
             {score}
           </p>
-          <p className="text-gray-300 mb-8">matches found</p>
+          <p className="text-gray-400 mb-2">of {targetScore} required</p>
+          <p className="text-gray-500 mb-8 text-sm">The darkness claims another soul...</p>
           <div className="space-y-3">
             <button
               onClick={() => startGame(level, false)}
-              className="block w-full px-8 py-3 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200 backdrop-blur-sm border border-white/20"
+              className="block w-full px-8 py-3 bg-red-900/50 hover:bg-red-800/50 text-red-300 rounded-lg transition-all duration-200 border border-red-800"
             >
-              Play Again
+              Rise Again
             </button>
-            {level < LEVELS.length - 1 && (
+            <button
+              onClick={() => setGameState('menu')}
+              className="block w-full px-8 py-3 text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Retreat to Shadows
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render level complete - player reached target score
+  if (gameState === 'levelComplete') {
+    const isLastLevel = level >= LEVELS.length - 1;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-950 to-gray-900 flex items-center justify-center p-4">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-red-400 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Times New Roman, serif', textShadow: '0 0 20px rgba(220,38,38,0.7)' }}>
+            {isLastLevel ? 'Ascended' : 'Victorious'}
+          </h1>
+          <p className="text-6xl font-bold text-red-500 mb-2" style={{ textShadow: '0 0 40px rgba(220,38,38,0.6)' }}>
+            {score}
+          </p>
+          <p className="text-gray-400 mb-2">souls claimed</p>
+          <p className="text-gray-500 mb-8 text-sm">
+            {isLastLevel ? 'You have conquered all realms!' : 'The next circle of hell awaits...'}
+          </p>
+          <div className="space-y-3">
+            {!isLastLevel && (
               <button
                 onClick={nextLevel}
-                className="block w-full px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white rounded-lg transition-all duration-200"
+                className="block w-full px-8 py-3 bg-red-800/60 hover:bg-red-700/60 text-red-200 rounded-lg transition-all duration-200 border border-red-600"
+                style={{ textShadow: '0 0 10px rgba(220,38,38,0.5)' }}
               >
-                Next Level →
+                Descend Deeper →
               </button>
             )}
             <button
-              onClick={() => setGameState('menu')}
-              className="block w-full px-8 py-3 text-gray-400 hover:text-white transition-colors"
+              onClick={() => startGame(level, false)}
+              className="block w-full px-8 py-3 bg-black/50 hover:bg-black/70 text-gray-300 rounded-lg transition-all duration-200 border border-gray-700"
             >
-              Back to Menu
+              Replay This Circle
+            </button>
+            <button
+              onClick={() => setGameState('menu')}
+              className="block w-full px-8 py-3 text-gray-500 hover:text-gray-300 transition-colors"
+            >
+              Return to the Void
             </button>
           </div>
         </div>
@@ -628,11 +680,13 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
       {/* Header */}
       <div className="w-full max-w-lg flex justify-between items-center mb-4 text-white">
         <div className="text-lg">
-          <span className="text-gray-400">Level</span>{' '}
+          <span className="text-gray-400">Circle</span>{' '}
           <span className="font-bold">{level + 1}</span>
         </div>
-        <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-          {score}
+        <div className="text-center">
+          <div className={`text-3xl font-bold ${score >= config.targetScore ? 'text-red-400' : 'text-red-600'}`} style={{ textShadow: score >= config.targetScore ? '0 0 20px rgba(220,38,38,0.7)' : 'none' }}>
+            {score}<span className="text-lg text-gray-500">/{config.targetScore}</span>
+          </div>
         </div>
         <div className="text-lg">
           <span className={`font-mono ${timeLeft <= 10 ? 'text-red-400 animate-pulse' : ''}`}>

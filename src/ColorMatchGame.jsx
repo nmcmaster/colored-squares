@@ -549,6 +549,10 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
 
   // Render game - Watch Mode (minimal UI for tiny screens)
   if (isWatchMode) {
+    // Don't render until grid is initialized
+    if (squaresRef.current.length === 0) {
+      return <div className="min-h-screen min-w-full bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900" />;
+    }
     return (
       <div className="min-h-screen min-w-full bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 flex flex-col items-center justify-center p-1">
         {/* Compact header - score and time only */}
@@ -752,6 +756,10 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   }
 
   // Render game - Standard Mode
+  // Don't render until grid is initialized
+  if (squaresRef.current.length === 0) {
+    return <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900" />;
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex flex-col items-center justify-center p-4">
       {/* Header */}

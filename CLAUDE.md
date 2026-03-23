@@ -33,9 +33,12 @@ MIDJOURNEY_PROMPTS.md  # Prompts used to generate scene images
 - **Color threshold** determines match sensitivity (varies by level)
 
 ### Block Clearing Animation
-- Matched blocks disappear leaving gaps
-- After 700ms delay, new blocks **smash in from random directions**
-- Each replacement block picks its own direction (chaotic effect)
+- Matched blocks disappear leaving gaps (300ms fade)
+- After 700ms delay, new blocks drop in from top
+- **Physics-based pushing**: New blocks push existing blocks down to fill gaps
+- Each block tracks its displacement for proper animation
+- Existing blocks stay still until "hit" by incoming blocks
+- Clean stop animations (no bounce/overshoot to maintain solid feel)
 - Grid shakes on impact
 
 ### Levels (7 total, mapping to circles of Hell)
@@ -66,7 +69,7 @@ GOTHIC_HUES = [
 - 7 circles × 3 scenes each = 21 base images
 - Many have alternate versions (randomly selected per playthrough)
 - Scene progression: 0-33% → Scene 1, 33-66% → Scene 2, 66-100% → Scene 3
-- **Scene transitions**: Slow shadow descent effect with flickering
+- **Scene transitions**: Immediate change when progress thresholds crossed
 
 ### Mobile Layout
 - **Full-bleed background**: Scene image pinned to top of screen
@@ -81,7 +84,7 @@ GOTHIC_HUES = [
 - Split screen: game grid left, framed illustration right
 - Score counter centered above grid (gothic serif font)
 - Timer in bottom right corner
-- Woodcut crosshatch background texture
+- Plain black background
 
 ### Typography
 - Gothic serif font (Times New Roman) for score counter and overlays
@@ -92,15 +95,14 @@ GOTHIC_HUES = [
 - **Score counter**: Casino-style rolling numbers with flame effect when incrementing
 - **Toasts**: Gothic themed - WICKED, UNHOLY, CURSED, DIABOLICAL, BLOOD RITE
 - **Circle info**: Horror flicker effect (Resident Evil broken light vibe)
-- **Block slide-in**: Bounce animation from random directions
+- **Block slide-in**: Smooth drop from top with clean stop (no bounce)
 - **Grid shake**: Directional shake on block impact
 
 ### CSS Classes (in index.css)
-- `.woodcut-bg` - Crosshatch texture background (desktop)
 - `.text-outline` / `.text-outline-light` - Soft black glow for text legibility
 - `.circle-info-fade` - Horror flicker animation (12s cycle, mostly hidden)
-- `.shadow-transition` - Scene change shadow descent (5s with flickering)
-- `.slide-in-{top,right,bottom,left}` - Block entry animations with bounce
+- `.slide-in-{top,right,bottom,left}` - Block entry animations (clean stop)
+- `.pushed-down` - Animation for existing blocks being pushed by new ones
 - `.grid-shake-{top,right,bottom,left}` - Impact shake
 
 ## Routes
@@ -112,7 +114,6 @@ GOTHIC_HUES = [
 - `squaresRef` - Mutable ref for square colors/states (performance)
 - `score` / `displayScore` - Actual vs animated display score
 - `selectedScenes` - Randomly chosen image variants for current playthrough
-- `sceneTransition` / `displayedSceneIndex` - Controls shadow descent animation
 - `gridShake` - Triggers directional shake
 
 ## iOS Considerations
@@ -130,9 +131,11 @@ npm run build  # Production build
 Dev server is typically running in background during sessions.
 
 ## Recent Session Work
-- Implemented chaotic block replacement (random directions per block)
+- Physics-based block pushing (new blocks push existing blocks down)
+- Blocks always drop from top with proper displacement tracking
+- Clean stop animations (removed bounce/overshoot for solid feel)
+- Plain black background (removed woodcut texture)
+- Simplified scene transitions (immediate change on progress)
+- Fixed z-index for circle info overlay on mobile
 - Mobile full-bleed background with mirrored reflection
-- Removed grid background for transparency
 - Progressive masonic symbol reveal
-- iOS safe area black background fix
-- Soft text glow instead of hard outline

@@ -20,6 +20,7 @@ public/
                        # Named: circle-{1-7}-scene-{1-3}.png
                        # Alternates: circle-X-scene-Y-alt-{N}.png
   _redirects           # Netlify SPA routing
+index.html             # Entry point with iOS meta tags
 MIDJOURNEY_PROMPTS.md  # Prompts used to generate scene images
 ```
 
@@ -68,15 +69,19 @@ GOTHIC_HUES = [
 - **Scene transitions**: Slow shadow descent effect with flickering
 
 ### Mobile Layout
-- Full-bleed background image pinned to top
-- Mirrored reflection fills space below
-- Game grid at bottom of screen
-- Circle info overlay (roman numeral, name, subtitle, masonic symbols) with flicker animation
+- **Full-bleed background**: Scene image pinned to top of screen
+- **Mirrored reflection**: Vertically flipped copy fills space below main image
+- **No grid background**: Squares float directly over the illustration
+- **Grid at bottom**: Game grid positioned at bottom of screen
+- **Circle info overlay**: Roman numeral, circle name, subtitle with flicker animation
+- **Progressive symbols**: Masonic symbols (△ ◈ ▽) appear one at a time as scenes progress
+- **iOS safe areas**: Black background extends to status bar and home indicator
 
 ### Desktop Layout
 - Split screen: game grid left, framed illustration right
-- Score counter centered above grid
+- Score counter centered above grid (gothic serif font)
 - Timer in bottom right corner
+- Woodcut crosshatch background texture
 
 ### Typography
 - Gothic serif font (Times New Roman) for score counter and overlays
@@ -91,11 +96,11 @@ GOTHIC_HUES = [
 - **Grid shake**: Directional shake on block impact
 
 ### CSS Classes (in index.css)
-- `.woodcut-bg` - Crosshatch texture background
-- `.text-outline` / `.text-outline-light` - Soft black glow for text
-- `.circle-info-fade` - Horror flicker animation
-- `.shadow-transition` - Scene change shadow descent
-- `.slide-in-{top,right,bottom,left}` - Block entry animations
+- `.woodcut-bg` - Crosshatch texture background (desktop)
+- `.text-outline` / `.text-outline-light` - Soft black glow for text legibility
+- `.circle-info-fade` - Horror flicker animation (12s cycle, mostly hidden)
+- `.shadow-transition` - Scene change shadow descent (5s with flickering)
+- `.slide-in-{top,right,bottom,left}` - Block entry animations with bounce
 - `.grid-shake-{top,right,bottom,left}` - Impact shake
 
 ## Routes
@@ -107,9 +112,14 @@ GOTHIC_HUES = [
 - `squaresRef` - Mutable ref for square colors/states (performance)
 - `score` / `displayScore` - Actual vs animated display score
 - `selectedScenes` - Randomly chosen image variants for current playthrough
-- `sceneTransition` - Controls shadow descent animation
-- `spawnDirection` - Cycles for block entry (now random per block)
+- `sceneTransition` / `displayedSceneIndex` - Controls shadow descent animation
 - `gridShake` - Triggers directional shake
+
+## iOS Considerations
+- `theme-color` meta tag set to black
+- `apple-mobile-web-app-status-bar-style` set to black-translucent
+- `viewport-fit=cover` for notch handling
+- Black background on `html` and `body` elements
 
 ## Development
 ```bash
@@ -118,3 +128,11 @@ npm run build  # Production build
 ```
 
 Dev server is typically running in background during sessions.
+
+## Recent Session Work
+- Implemented chaotic block replacement (random directions per block)
+- Mobile full-bleed background with mirrored reflection
+- Removed grid background for transparency
+- Progressive masonic symbol reveal
+- iOS safe area black background fix
+- Soft text glow instead of hard outline

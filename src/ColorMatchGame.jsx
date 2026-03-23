@@ -14,15 +14,16 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
 
   // Dante's Inferno - Circles of Hell scene configuration
   // Each level has 3 scene states based on score progress
+  // Each scene can have multiple alternates - one is chosen randomly per playthrough
   const INFERNO_SCENES = [
     {
       circle: 'I',
       name: 'Limbo',
       subtitle: 'The Virtuous Pagans',
       scenes: [
-        '/scenes/1-limbo-1.png',  // 0-33% of target
-        '/scenes/1-limbo-2.png',  // 33-66% of target
-        '/scenes/1-limbo-3.png',  // 66-100% of target
+        ['/scenes/circle-1-scene-1.png'],
+        ['/scenes/circle-1-scene-2.png'],
+        ['/scenes/circle-1-scene-3.png'],
       ],
     },
     {
@@ -30,9 +31,9 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
       name: 'Lust',
       subtitle: 'The Carnal Sinners',
       scenes: [
-        '/scenes/2-lust-1.png',
-        '/scenes/2-lust-2.png',
-        '/scenes/2-lust-3.png',
+        ['/scenes/circle-2-scene-1.png'],
+        ['/scenes/circle-2-scene-2.png'],
+        ['/scenes/circle-2-scene-3.png'],
       ],
     },
     {
@@ -40,9 +41,9 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
       name: 'Gluttony',
       subtitle: 'The Cerberus Guard',
       scenes: [
-        '/scenes/3-gluttony-1.png',
-        '/scenes/3-gluttony-2.png',
-        '/scenes/3-gluttony-3.png',
+        ['/scenes/circle-3-scene-1.png'],
+        ['/scenes/circle-3-scene-2.png'],
+        ['/scenes/circle-3-scene-3.png', '/scenes/circle-3-scene-3-alt.png'],
       ],
     },
     {
@@ -50,9 +51,9 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
       name: 'Greed',
       subtitle: 'The Hoarders & Spenders',
       scenes: [
-        '/scenes/4-greed-1.png',
-        '/scenes/4-greed-2.png',
-        '/scenes/4-greed-3.png',
+        ['/scenes/circle-4-scene-1.png', '/scenes/circle-4-scene-1-alt-1.png', '/scenes/circle-4-scene-1-alt-2.png'],
+        ['/scenes/circle-4-scene-2.png', '/scenes/circle-4-scene-2-alt-1.png'],
+        ['/scenes/circle-4-scene-3.png', '/scenes/circle-4-sceme-3-alt-1.png', '/scenes/circle-4-sceme-3-alt-2.png', '/scenes/circle-4-sceme-3-alt-3.png', '/scenes/circle-4-sceme-3-alt-4.png'],
       ],
     },
     {
@@ -60,9 +61,9 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
       name: 'Wrath',
       subtitle: 'The River Styx',
       scenes: [
-        '/scenes/5-wrath-1.png',
-        '/scenes/5-wrath-2.png',
-        '/scenes/5-wrath-3.png',
+        ['/scenes/circle-5-scene-1.png', '/scenes/circle-5-scene-1-alt-1.png', '/scenes/circle-5-scene-1-alt-2png.png', '/scenes/circle-5-scene-1-alt-3.png'],
+        ['/scenes/circle-5-scene-2.png', '/scenes/circle-5-scene-2-alt-1.png', '/scenes/cricle-5-scene-2-alt-2.png', '/scenes/cricle-5-scene-2-alt-3.png'],
+        ['/scenes/circle-5-scene-3.png', '/scenes/circle-5-scene-3-alt-1.png', '/scenes/circle-5-scene-3-alt-2.png', '/scenes/circle-5-scene-3-alt-3.png'],
       ],
     },
     {
@@ -70,9 +71,9 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
       name: 'Heresy',
       subtitle: 'The Flaming Tombs',
       scenes: [
-        '/scenes/6-heresy-1.png',
-        '/scenes/6-heresy-2.png',
-        '/scenes/6-heresy-3.png',
+        ['/scenes/circle-6-scene-1.png', '/scenes/circle-6-scene-1-alt-1.png'],
+        ['/scenes/circle-6-scene-2.png', '/scenes/circle-6-scene-2-alt-1.png'],
+        ['/scenes/circle-6-scene-3.png'],
       ],
     },
     {
@@ -80,16 +81,26 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
       name: 'Violence',
       subtitle: 'The River of Blood',
       scenes: [
-        '/scenes/7-violence-1.png',
-        '/scenes/7-violence-2.png',
-        '/scenes/7-violence-3.png',
+        ['/scenes/circle-7-scene-1.png', '/scenes/circle-7-scene-1-alt-1.png'],
+        ['/scenes/circle-7-scene-2.png', '/scenes/circle-7-scene-2-alt-1.png', '/scenes/circle-7-scene-2-alt-2.png', '/scenes/circle-7-scene-2-alt-3.png'],
+        ['/scenes/circle-7-scene-3.png', '/scenes/circle-7-scene-3-alt-1.png', '/scenes/circle-7-scene-3-alt-2.png', '/scenes/circle-7-scene-3-alt-3.png', '/scenes/circle-7-scene-3-alt-4.png', '/scenes/circle-7-scene-3-alt-5.png'],
       ],
     },
   ];
 
+  // Randomly select one image variant for each scene in each circle
+  const selectRandomScenes = () => {
+    return INFERNO_SCENES.map(circle =>
+      circle.scenes.map(variants =>
+        variants[Math.floor(Math.random() * variants.length)]
+      )
+    );
+  };
+
   // Get current scene based on level and score progress
   const getCurrentScene = () => {
     const infernoLevel = INFERNO_SCENES[Math.min(level, INFERNO_SCENES.length - 1)];
+    const levelScenes = selectedScenes[Math.min(level, selectedScenes.length - 1)] || [];
     const targetScore = LEVELS[level]?.targetScore || 1;
     const progress = score / targetScore;
 
@@ -97,9 +108,12 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
     if (progress >= 0.66) sceneIndex = 2;
     else if (progress >= 0.33) sceneIndex = 1;
 
+    // Use displayedSceneIndex for actual image (delayed during transitions)
+    const imageIndex = sceneTransition ? displayedSceneIndex : sceneIndex;
+
     return {
       ...infernoLevel,
-      currentScene: infernoLevel.scenes[sceneIndex],
+      currentScene: levelScenes[imageIndex] || infernoLevel.scenes[imageIndex]?.[0],
       sceneIndex,
     };
   };
@@ -122,6 +136,13 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   const [floatingScores, setFloatingScores] = useState([]);
   const [isWatchMode, setIsWatchMode] = useState(false);
   const [toasts, setToasts] = useState([]);
+  const [showIntro, setShowIntro] = useState(false); // Dramatic intro overlay
+  const [selectedScenes, setSelectedScenes] = useState([]); // Randomly selected scene images per circle
+  const [sceneTransition, setSceneTransition] = useState(false); // Shadow transition active
+  const [displayedSceneIndex, setDisplayedSceneIndex] = useState(0); // Which scene is actually showing
+  const [spawnDirection, setSpawnDirection] = useState(0); // 0=top, 1=right, 2=bottom, 3=left
+  const [gridShake, setGridShake] = useState(null); // Direction of grid shake on impact
+  const prevSceneIndexRef = useRef(0);
 
   // Toast messages based on match size - Gothic/Metal themed
   const getMatchToast = (size) => {
@@ -329,21 +350,49 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
         showToast(matchToast.text, matchToast.style);
       }
 
-      // After animation, replace all squares in cluster
+      // After match animation, mark as empty (gaps)
       setTimeout(() => {
         const squares = squaresRef.current;
         for (const idx of clusterArray) {
           if (squares[idx]) {
-            squares[idx] = {
-              id: idx,
-              color: randomHSL(),
-              target: randomHSL(),
-              state: 'active',
-            };
+            squares[idx].state = 'empty';
           }
           matchingSquaresRef.current.delete(idx);
         }
       }, 300);
+
+      // After gap pause, smash in new blocks from random directions (chaotic!)
+      const directionNames = ['top', 'right', 'bottom', 'left'];
+
+      setTimeout(() => {
+        const squares = squaresRef.current;
+        const emptyCells = clusterArray.filter(idx => squares[idx]?.state === 'empty');
+
+        // Each empty cell gets a random direction
+        emptyCells.forEach(idx => {
+          const randomDir = directionNames[Math.floor(Math.random() * 4)];
+          squares[idx] = {
+            id: idx,
+            color: randomHSL(),
+            target: randomHSL(),
+            state: 'active',
+            slideFrom: randomDir,
+          };
+        });
+
+        // Trigger grid shake in a random direction
+        setGridShake(directionNames[Math.floor(Math.random() * 4)]);
+        setTimeout(() => setGridShake(null), 300);
+
+        // Clear slideFrom after animation
+        setTimeout(() => {
+          const squares = squaresRef.current;
+          for (const sq of squares) {
+            if (sq.slideFrom) delete sq.slideFrom;
+          }
+        }, 400);
+
+      }, 700); // Delay before blocks smash in
     } else {
       // Invalid tap - shake feedback
       invalidSquareRef.current = index;
@@ -394,6 +443,27 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   useEffect(() => {
     scoreRef.current = score;
   }, [score]);
+
+  // Detect scene changes and trigger flame transition
+  useEffect(() => {
+    if (gameState !== 'playing' || isWatchMode) return;
+
+    const targetScore = LEVELS[level]?.targetScore || 1;
+    const progress = score / targetScore;
+    let currentSceneIndex = 0;
+    if (progress >= 0.66) currentSceneIndex = 2;
+    else if (progress >= 0.33) currentSceneIndex = 1;
+
+    if (currentSceneIndex > prevSceneIndexRef.current) {
+      // Scene advanced - trigger shadow descent
+      setSceneTransition(true);
+      // Swap image midway through transition while obscured by shadow
+      setTimeout(() => setDisplayedSceneIndex(currentSceneIndex), 2000);
+      // End transition
+      setTimeout(() => setSceneTransition(false), 5000);
+    }
+    prevSceneIndexRef.current = currentSceneIndex;
+  }, [score, level, gameState, isWatchMode]);
 
   // Animate displayScore to match actual score (casino-style rolling)
   useEffect(() => {
@@ -460,12 +530,19 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
     setTimeLeft(watchMode ? WATCH_DURATION : GAME_DURATION);
     setFloatingScores([]);
     setToasts([]);
+    setSelectedScenes(selectRandomScenes()); // Randomly pick scene variants for this playthrough
+    prevSceneIndexRef.current = 0; // Reset scene tracking
+    setDisplayedSceneIndex(0);
+    setSceneTransition(false);
+    setSpawnDirection(0); // Reset spawn direction
+    setGridShake(null);
     setGameState('playing');
 
-    // Show intro toast
+    // Show dramatic intro overlay
+    setShowIntro(true);
     setTimeout(() => {
-      showToast('SEEK THE BLOOD MATCH', 'intro', 2500);
-    }, 300);
+      setShowIntro(false);
+    }, 2800); // Total intro duration
   };
 
   // Auto-start if props are set (guard against StrictMode double-fire)
@@ -502,7 +579,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   // Render menu
   if (gameState === 'menu') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4 woodcut-bg">
         <div className="text-center">
           <h1 className="text-5xl font-bold text-white mb-4 tracking-tight">
             Color Match
@@ -566,7 +643,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   if (gameState === 'gameover') {
     const targetScore = LEVELS[level]?.targetScore || 0;
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-red-950 to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4 woodcut-bg">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-red-500 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Times New Roman, serif', textShadow: '0 0 20px rgba(220,38,38,0.5)' }}>
             Fallen
@@ -599,7 +676,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   if (gameState === 'levelComplete') {
     const isLastLevel = level >= LEVELS.length - 1;
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-950 to-gray-900 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-black flex items-center justify-center p-4 woodcut-bg">
         <div className="text-center">
           <h1 className="text-4xl font-bold text-red-400 mb-2 uppercase tracking-wider" style={{ fontFamily: 'Times New Roman, serif', textShadow: '0 0 20px rgba(220,38,38,0.7)' }}>
             {isLastLevel ? 'Ascended' : 'Victorious'}
@@ -670,7 +747,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
         <div className="relative">
           <div
             ref={gridRef}
-            className="grid gap-1 p-1 bg-black/40 rounded-lg"
+            className={`grid gap-1 p-1 bg-black/40 rounded-lg ${gridShake ? `grid-shake-${gridShake}` : ''}`}
             style={{
               gridTemplateColumns: `repeat(${config.gridSize}, 1fr)`,
               width: `min(95vw, 180px)`,
@@ -681,14 +758,17 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
               <button
                 key={square.id}
                 onClick={() => handleSquareClick(index)}
+                disabled={square.state === 'empty'}
                 className={`
-                  rounded-md transition-all duration-100 cursor-pointer
-                  active:scale-90
+                  rounded-md cursor-pointer
+                  active:scale-90 transition-transform duration-100
+                  ${square.state === 'empty' ? 'opacity-0 pointer-events-none' : ''}
                   ${matchingSquaresRef.current.has(index) ? 'animate-ping opacity-0' : ''}
                   ${invalidSquareRef.current === index ? 'animate-shake' : ''}
+                  ${square.slideFrom ? `slide-in-${square.slideFrom}` : ''}
                 `}
                 style={{
-                  backgroundColor: hslToString(square.color),
+                  backgroundColor: square.state === 'empty' ? 'transparent' : hslToString(square.color),
                   aspectRatio: '1',
                 }}
               />
@@ -734,8 +814,61 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
           </div>
         )}
 
+        {/* Dramatic Intro Overlay */}
+        {showIntro && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
+            {/* Strobe flashes - subtle */}
+            <div className="absolute inset-0 strobe-flash-subtle" />
+
+            {/* Bounded text box */}
+            <div className="relative z-10 intro-box px-6 py-4 border-2 border-red-800 bg-black/95"
+                 style={{ boxShadow: '0 0 40px rgba(0,0,0,0.9), 0 0 20px rgba(220,38,38,0.3), inset 0 0 20px rgba(220,38,38,0.1)' }}>
+              <div className="text-xl font-bold uppercase tracking-widest text-red-700 intro-title text-center" style={{ fontFamily: 'Times New Roman, serif' }}>
+                SEEK THE
+              </div>
+              <div className="text-3xl font-bold uppercase tracking-widest text-red-500 intro-title-main mt-1 text-center" style={{ fontFamily: 'Times New Roman, serif', textShadow: '0 0 15px rgba(220,38,38,0.8)' }}>
+                BLOOD MATCH
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Custom animations */}
         <style>{`
+          /* Intro overlay animations */
+          @keyframes strobeFlashSubtle {
+            0% { background: transparent; }
+            5% { background: rgba(220, 38, 38, 0.15); }
+            10% { background: transparent; }
+            15% { background: rgba(255, 255, 255, 0.1); }
+            20% { background: transparent; }
+            100% { background: transparent; }
+          }
+          .strobe-flash-subtle {
+            animation: strobeFlashSubtle 1s ease-out;
+          }
+          @keyframes introBoxIn {
+            0% { opacity: 0; transform: scale(0.8); }
+            20% { opacity: 1; transform: scale(1.05); }
+            30% { transform: scale(1); }
+            85% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.95); }
+          }
+          .intro-box {
+            animation: introBoxIn 2.8s ease-out forwards;
+          }
+          @keyframes introTitleIn {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            85% { opacity: 1; }
+            100% { opacity: 0; }
+          }
+          .intro-title {
+            animation: introTitleIn 2.8s ease-out forwards;
+          }
+          .intro-title-main {
+            animation: introTitleIn 2.8s ease-out forwards;
+          }
           @keyframes float {
             0% {
               opacity: 1;
@@ -850,50 +983,38 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   // Render game - Standard Mode
   // Don't render until grid is initialized
   if (squaresRef.current.length === 0) {
-    return <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900" />;
+    return <div className="min-h-screen bg-black" />;
   }
 
   const infernoScene = getCurrentScene();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-gray-900 flex flex-col">
-      {/* Header */}
-      <div className="w-full flex justify-between items-center p-4 text-white">
-        <div className="text-lg">
-          <span className="text-red-700 font-serif italic">Circle {infernoScene.circle}</span>{' '}
-          <span className="font-bold text-red-500" style={{ fontFamily: 'Times New Roman, serif' }}>{infernoScene.name}</span>
-        </div>
-        <div className="text-center relative">
-          {displayScore < score && (
-            <>
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <span className="flame-ember flame-1">🔥</span>
-                <span className="flame-ember flame-2">🔥</span>
-                <span className="flame-ember flame-3">🔥</span>
-                <span className="flame-ember flame-4">🔥</span>
-                <span className="flame-ember flame-5">🔥</span>
-              </div>
-              <div className="absolute -inset-4 bg-gradient-to-t from-red-900/50 via-orange-600/30 to-transparent rounded-full blur-xl animate-pulse pointer-events-none" />
-            </>
-          )}
-          <div className={`relative z-10 text-3xl font-bold tabular-nums ${displayScore < score ? 'flame-text' : ''} ${score >= config.targetScore ? 'text-red-400' : 'text-red-600'}`} style={{ textShadow: score >= config.targetScore ? '0 0 20px rgba(220,38,38,0.7)' : 'none' }}>
-            {displayScore}<span className="text-lg text-gray-500">/{config.targetScore}</span>
-          </div>
-        </div>
-        <div className="text-lg">
-          <span className={`font-mono ${timeLeft <= 10 ? 'text-red-400 animate-pulse' : ''}`}>
-            {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
-          </span>
-        </div>
-      </div>
-
+    <div className="min-h-screen bg-black flex flex-col woodcut-bg">
       {/* Main content - split layout on desktop */}
       <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-4 p-4">
         {/* Game Grid - left side on desktop */}
-        <div className="relative flex-shrink-0">
+        <div className="relative flex-shrink-0 flex flex-col items-center">
+          {/* Score counter - centered above grid */}
+          <div className="text-center relative mb-4">
+            {displayScore < score && (
+              <>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="flame-ember flame-1">🔥</span>
+                  <span className="flame-ember flame-2">🔥</span>
+                  <span className="flame-ember flame-3">🔥</span>
+                  <span className="flame-ember flame-4">🔥</span>
+                  <span className="flame-ember flame-5">🔥</span>
+                </div>
+                <div className="absolute -inset-4 bg-gradient-to-t from-red-900/50 via-orange-600/30 to-transparent rounded-full blur-xl animate-pulse pointer-events-none" />
+              </>
+            )}
+            <div className={`relative z-10 text-4xl font-bold tabular-nums ${displayScore < score ? 'flame-text' : ''} ${score >= config.targetScore ? 'text-red-400' : 'text-red-600'}`} style={{ fontFamily: 'Times New Roman, serif', textShadow: score >= config.targetScore ? '0 0 20px rgba(220,38,38,0.7)' : 'none' }}>
+              {displayScore}<span className="text-xl text-gray-500">/{config.targetScore}</span>
+            </div>
+          </div>
           <div
             ref={gridRef}
-            className="grid gap-1 p-2 bg-black/30 rounded-xl backdrop-blur-sm"
+            className={`grid gap-1 p-2 bg-black/30 rounded-xl backdrop-blur-sm ${gridShake ? `grid-shake-${gridShake}` : ''}`}
             style={{
               gridTemplateColumns: `repeat(${config.gridSize}, 1fr)`,
               width: `min(90vw, 400px)`,
@@ -904,14 +1025,17 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
               <button
                 key={square.id}
                 onClick={() => handleSquareClick(index)}
+                disabled={square.state === 'empty'}
                 className={`
-                  rounded-md transition-all duration-150 cursor-pointer
-                  hover:scale-105 hover:z-10
+                  rounded-md cursor-pointer
+                  hover:scale-105 hover:z-10 transition-transform duration-150
+                  ${square.state === 'empty' ? 'opacity-0 pointer-events-none' : ''}
                   ${matchingSquaresRef.current.has(index) ? 'animate-ping opacity-0' : ''}
                   ${invalidSquareRef.current === index ? 'animate-shake' : ''}
+                  ${square.slideFrom ? `slide-in-${square.slideFrom}` : ''}
                 `}
                 style={{
-                  backgroundColor: hslToString(square.color),
+                  backgroundColor: square.state === 'empty' ? 'transparent' : hslToString(square.color),
                   aspectRatio: '1',
                 }}
               />
@@ -941,46 +1065,50 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
             <img
               src={infernoScene.currentScene}
               alt={`${infernoScene.name} - Scene ${infernoScene.sceneIndex + 1}`}
-              className="w-full h-full object-cover transition-opacity duration-700"
+              className="w-full h-full object-cover"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
             />
-            {/* Fallback/overlay when no image */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center p-8 bg-gradient-to-b from-black/60 via-transparent to-black/80">
-              <div className="text-red-800 text-6xl font-serif mb-4" style={{ fontFamily: 'Times New Roman, serif' }}>
-                {infernoScene.circle}
-              </div>
-              <div className="text-red-500 text-2xl font-bold uppercase tracking-widest" style={{ fontFamily: 'Times New Roman, serif' }}>
-                {infernoScene.name}
-              </div>
-              <div className="text-red-700/70 text-sm mt-2 italic">
-                {infernoScene.subtitle}
-              </div>
-              <div className="mt-8 flex gap-2">
-                {[0, 1, 2].map(i => (
-                  <div
-                    key={i}
-                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
-                      i <= infernoScene.sceneIndex ? 'bg-red-500 shadow-lg shadow-red-500/50' : 'bg-red-900/50'
-                    }`}
-                  />
-                ))}
-              </div>
-            </div>
+            {/* Shadow descent transition */}
+            {sceneTransition && (
+              <div className="absolute inset-0 shadow-transition pointer-events-none" />
+            )}
           </div>
         </div>
       </div>
 
-      {/* Pause button */}
-      <div className="p-4 text-center">
+      {/* Bottom bar - timer and pause */}
+      <div className="p-4 flex justify-between items-center">
         <button
           onClick={() => setGameState('menu')}
           className="px-6 py-2 text-gray-500 hover:text-red-400 transition-colors text-sm"
         >
           ← Abandon Hope
         </button>
+        <div className={`text-xl font-mono ${timeLeft <= 10 ? 'text-red-400 animate-pulse' : 'text-gray-400'}`}>
+          {Math.floor(timeLeft / 60)}:{(timeLeft % 60).toString().padStart(2, '0')}
+        </div>
       </div>
+
+      {/* Dramatic Intro Overlay */}
+      {showIntro && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none">
+          {/* Strobe flashes - more subtle */}
+          <div className="absolute inset-0 strobe-flash-subtle" />
+
+          {/* Bounded text box */}
+          <div className="relative z-10 intro-box px-8 py-6 md:px-12 md:py-8 border-2 border-red-800 bg-black/95"
+               style={{ boxShadow: '0 0 60px rgba(0,0,0,0.9), 0 0 30px rgba(220,38,38,0.3), inset 0 0 30px rgba(220,38,38,0.1)' }}>
+            <div className="text-2xl md:text-3xl font-bold uppercase tracking-widest text-red-700 intro-title text-center" style={{ fontFamily: 'Times New Roman, serif' }}>
+              SEEK THE
+            </div>
+            <div className="text-4xl md:text-6xl font-bold uppercase tracking-widest text-red-500 intro-title-main mt-1 text-center" style={{ fontFamily: 'Times New Roman, serif', textShadow: '0 0 20px rgba(220,38,38,0.8), 0 0 40px rgba(220,38,38,0.5)' }}>
+              BLOOD MATCH
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Toasts - Gothic style */}
       <div className="fixed top-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 z-50 pointer-events-none px-4">
@@ -1005,6 +1133,59 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
 
       {/* Custom animations */}
       <style>{`
+        /* Intro overlay animations */
+        @keyframes introFadeIn {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+        @keyframes introFadeOut {
+          0% { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        .intro-overlay {
+          animation: introFadeIn 0.1s ease-out, introFadeOut 0.5s ease-out 2.3s forwards;
+        }
+        @keyframes strobeFlash {
+          0% { background: transparent; }
+          5% { background: rgba(255, 50, 50, 0.9); }
+          10% { background: transparent; }
+          15% { background: rgba(255, 255, 255, 0.95); }
+          20% { background: transparent; }
+          50% { background: transparent; }
+          55% { background: rgba(255, 50, 50, 0.8); }
+          60% { background: transparent; }
+          65% { background: rgba(255, 255, 255, 0.9); }
+          70% { background: transparent; }
+          100% { background: transparent; }
+        }
+        .strobe-flash {
+          animation: strobeFlash 1.6s ease-out;
+        }
+        @keyframes introTitleIn {
+          0% { opacity: 0; transform: scale(0.5); }
+          50% { opacity: 0; transform: scale(0.5); }
+          70% { opacity: 1; transform: scale(1.2); }
+          100% { opacity: 1; transform: scale(1); }
+        }
+        @keyframes introTitleMainIn {
+          0% { opacity: 0; transform: scale(0.3) translateY(20px); letter-spacing: 0.5em; }
+          60% { opacity: 0; transform: scale(0.3) translateY(20px); letter-spacing: 0.5em; }
+          80% { opacity: 1; transform: scale(1.3) translateY(0); letter-spacing: 0.3em; }
+          100% { opacity: 1; transform: scale(1) translateY(0); letter-spacing: 0.25em; }
+        }
+        .intro-title {
+          animation: introTitleIn 1.2s ease-out forwards;
+        }
+        .intro-title-main {
+          animation: introTitleMainIn 1.4s ease-out forwards;
+        }
+        @keyframes vignetteIn {
+          0% { box-shadow: inset 0 0 0 0 rgba(0,0,0,0); }
+          100% { box-shadow: inset 0 0 200px 80px rgba(0,0,0,0.9); }
+        }
+        .intro-vignette {
+          animation: vignetteIn 1s ease-out forwards;
+        }
         @keyframes float {
           0% {
             opacity: 1;

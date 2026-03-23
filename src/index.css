@@ -13,3 +13,173 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+/* Woodcut/engraving background texture - Gustave Doré inspired */
+.woodcut-bg {
+  background-color: #0a0a0a;
+  background-image:
+    repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 2px,
+      rgba(30, 30, 30, 0.5) 2px,
+      rgba(30, 30, 30, 0.5) 3px
+    ),
+    repeating-linear-gradient(
+      -45deg,
+      transparent,
+      transparent 2px,
+      rgba(25, 25, 25, 0.4) 2px,
+      rgba(25, 25, 25, 0.4) 3px
+    );
+}
+
+/* Circle info overlay - horror flicker effect */
+@keyframes circleInfoFlicker {
+  0% { opacity: 0.9; }
+  2% { opacity: 0; }
+  3% { opacity: 0.7; }
+  4% { opacity: 0; }
+  5% { opacity: 0.4; }
+  6% { opacity: 0; }
+  /* Stay hidden */
+  7%, 45% { opacity: 0; }
+  /* Flicker back in - broken light */
+  46% { opacity: 0.3; }
+  47% { opacity: 0; }
+  48% { opacity: 0.6; }
+  49% { opacity: 0.1; }
+  50% { opacity: 0; }
+  51% { opacity: 0.8; }
+  52% { opacity: 0.2; }
+  53% { opacity: 0.9; }
+  54% { opacity: 0.5; }
+  55% { opacity: 1; }
+  /* Hold visible briefly */
+  56%, 65% { opacity: 1; }
+  /* Flicker out */
+  66% { opacity: 0.6; }
+  67% { opacity: 0.9; }
+  68% { opacity: 0.3; }
+  69% { opacity: 0.7; }
+  70% { opacity: 0; }
+  71% { opacity: 0.4; }
+  72% { opacity: 0; }
+  /* Stay hidden for rest of cycle */
+  73%, 100% { opacity: 0; }
+}
+
+.circle-info-fade {
+  animation: circleInfoFlicker 12s linear infinite;
+}
+
+/* Text outline for legibility over images */
+.text-outline {
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000,
+    -2px 0 0 #000,
+    2px 0 0 #000,
+    0 -2px 0 #000,
+    0 2px 0 #000;
+}
+
+.text-outline-light {
+  text-shadow:
+    -1px -1px 0 #000,
+    1px -1px 0 #000,
+    -1px 1px 0 #000,
+    1px 1px 0 #000;
+}
+
+/* Shadow descent transition for scene changes */
+@keyframes shadowDescent {
+  0% { opacity: 0; }
+  8% { opacity: 0.7; }
+  12% { opacity: 0.4; }
+  18% { opacity: 0.85; }
+  22% { opacity: 0.6; }
+  28% { opacity: 0.9; }
+  /* Dense shadow for image swap at ~40% (2s of 5s) */
+  35% { opacity: 1; }
+  45% { opacity: 1; }
+  /* Continue pulsing over new image */
+  52% { opacity: 0.75; }
+  58% { opacity: 0.95; }
+  65% { opacity: 0.5; }
+  72% { opacity: 0.8; }
+  78% { opacity: 0.3; }
+  85% { opacity: 0.6; }
+  92% { opacity: 0.15; }
+  100% { opacity: 0; }
+}
+
+.shadow-transition {
+  z-index: 10;
+  background: black;
+  animation: shadowDescent 5s ease-in-out forwards;
+}
+
+/* Block slide-in animations */
+@keyframes slideInFromTop {
+  0% { transform: translateY(-200%); opacity: 0.8; }
+  70% { transform: translateY(10%); }
+  85% { transform: translateY(-5%); }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideInFromBottom {
+  0% { transform: translateY(200%); opacity: 0.8; }
+  70% { transform: translateY(-10%); }
+  85% { transform: translateY(5%); }
+  100% { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideInFromLeft {
+  0% { transform: translateX(-200%); opacity: 0.8; }
+  70% { transform: translateX(10%); }
+  85% { transform: translateX(-5%); }
+  100% { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideInFromRight {
+  0% { transform: translateX(200%); opacity: 0.8; }
+  70% { transform: translateX(-10%); }
+  85% { transform: translateX(5%); }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.slide-in-top { animation: slideInFromTop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.slide-in-bottom { animation: slideInFromBottom 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.slide-in-left { animation: slideInFromLeft 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.slide-in-right { animation: slideInFromRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+
+/* Grid shake on impact */
+@keyframes gridShakeTop {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(6px); }
+  50% { transform: translateY(-3px); }
+  75% { transform: translateY(2px); }
+}
+@keyframes gridShakeBottom {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-6px); }
+  50% { transform: translateY(3px); }
+  75% { transform: translateY(-2px); }
+}
+@keyframes gridShakeLeft {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(6px); }
+  50% { transform: translateX(-3px); }
+  75% { transform: translateX(2px); }
+}
+@keyframes gridShakeRight {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-6px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+}
+
+.grid-shake-top { animation: gridShakeTop 0.3s ease-out; }
+.grid-shake-bottom { animation: gridShakeBottom 0.3s ease-out; }
+.grid-shake-left { animation: gridShakeLeft 0.3s ease-out; }
+.grid-shake-right { animation: gridShakeRight 0.3s ease-out; }

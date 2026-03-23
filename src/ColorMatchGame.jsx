@@ -108,8 +108,8 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
     if (progress >= 0.66) sceneIndex = 2;
     else if (progress >= 0.33) sceneIndex = 1;
 
-    // Use displayedSceneIndex for actual image (delayed during transitions)
-    const imageIndex = sceneTransition ? displayedSceneIndex : sceneIndex;
+    // Always use the live sceneIndex based on current progress
+    const imageIndex = sceneIndex;
 
     return {
       ...infernoLevel,
@@ -1039,7 +1039,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   const infernoScene = getCurrentScene();
 
   return (
-    <div className="min-h-screen bg-black flex flex-col woodcut-bg relative">
+    <div className="min-h-screen bg-black flex flex-col relative">
       {/* Full bleed background image - mobile only, pinned to top */}
       <div className="absolute inset-0 md:hidden bg-black overflow-hidden">
         <img
@@ -1064,31 +1064,32 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
         {sceneTransition && (
           <div className="absolute inset-0 shadow-transition pointer-events-none" />
         )}
-        {/* Circle info overlay - fades in and out */}
-        <div className="absolute inset-x-0 top-0 flex flex-col items-center text-center pt-6 px-4 circle-info-fade">
-          <div className="text-white/90 text-4xl font-serif mb-1 text-outline" style={{ fontFamily: 'Times New Roman, serif' }}>
-            {infernoScene.circle}
-          </div>
-          <div className="text-white/80 text-xl font-bold uppercase tracking-widest text-outline" style={{ fontFamily: 'Times New Roman, serif' }}>
-            {infernoScene.name}
-          </div>
-          <div className="text-white/50 text-sm mt-1 italic text-outline-light">
-            {infernoScene.subtitle}
-          </div>
-          <div className="mt-4 flex gap-4 text-lg">
-            {['△', '◈', '▽'].map((symbol, i) => (
-              <span
-                key={i}
-                className={`transition-all duration-500 text-outline ${
-                  i <= infernoScene.sceneIndex
-                    ? 'text-white/90 drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]'
-                    : 'opacity-0'
-                }`}
-              >
-                {symbol}
-              </span>
-            ))}
-          </div>
+      </div>
+
+      {/* Circle info overlay - mobile only, fades in and out */}
+      <div className="absolute inset-x-0 top-0 flex flex-col items-center text-center pt-6 px-4 circle-info-fade z-20 md:hidden pointer-events-none">
+        <div className="text-white/90 text-4xl font-serif mb-1 text-outline" style={{ fontFamily: 'Times New Roman, serif' }}>
+          {infernoScene.circle}
+        </div>
+        <div className="text-white/80 text-xl font-bold uppercase tracking-widest text-outline" style={{ fontFamily: 'Times New Roman, serif' }}>
+          {infernoScene.name}
+        </div>
+        <div className="text-white/50 text-sm mt-1 italic text-outline-light">
+          {infernoScene.subtitle}
+        </div>
+        <div className="mt-4 flex gap-4 text-lg">
+          {['△', '◈', '▽'].map((symbol, i) => (
+            <span
+              key={i}
+              className={`transition-all duration-500 text-outline ${
+                i <= infernoScene.sceneIndex
+                  ? 'text-white/90 drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]'
+                  : 'opacity-0'
+              }`}
+            >
+              {symbol}
+            </span>
+          ))}
         </div>
       </div>
 

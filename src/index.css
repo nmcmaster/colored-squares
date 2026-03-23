@@ -119,80 +119,45 @@ body {
   animation: shadowDescent 5s ease-in-out forwards;
 }
 
-/* Block slide-in animations - slow approach, hard collision, shuddering settle */
+/* Block slide-in animations - slow approach, hard stop */
 @keyframes slideInFromTop {
   0% { transform: translateY(-250%); opacity: 0.7; }
   /* Slow approach */
-  40% { transform: translateY(-50%); opacity: 0.9; }
-  /* IMPACT - overshoot into position */
-  55% { transform: translateY(15%); opacity: 1; }
-  /* First bounce back */
-  65% { transform: translateY(-8%); }
-  /* Second collision */
-  73% { transform: translateY(5%); }
-  /* Shudder settle */
-  80% { transform: translateY(-3%); }
-  85% { transform: translateY(2%); }
-  90% { transform: translateY(-1%); }
-  95% { transform: translateY(0.5%); }
+  50% { transform: translateY(-40%); opacity: 0.9; }
+  /* Accelerate into position - hard stop */
   100% { transform: translateY(0); opacity: 1; }
 }
 @keyframes slideInFromBottom {
   0% { transform: translateY(250%); opacity: 0.7; }
-  40% { transform: translateY(50%); opacity: 0.9; }
-  55% { transform: translateY(-15%); opacity: 1; }
-  65% { transform: translateY(8%); }
-  73% { transform: translateY(-5%); }
-  80% { transform: translateY(3%); }
-  85% { transform: translateY(-2%); }
-  90% { transform: translateY(1%); }
-  95% { transform: translateY(-0.5%); }
+  50% { transform: translateY(40%); opacity: 0.9; }
   100% { transform: translateY(0); opacity: 1; }
 }
 @keyframes slideInFromLeft {
   0% { transform: translateX(-250%); opacity: 0.7; }
-  40% { transform: translateX(-50%); opacity: 0.9; }
-  55% { transform: translateX(15%); opacity: 1; }
-  65% { transform: translateX(-8%); }
-  73% { transform: translateX(5%); }
-  80% { transform: translateX(-3%); }
-  85% { transform: translateX(2%); }
-  90% { transform: translateX(-1%); }
-  95% { transform: translateX(0.5%); }
+  50% { transform: translateX(-40%); opacity: 0.9; }
   100% { transform: translateX(0); opacity: 1; }
 }
 @keyframes slideInFromRight {
   0% { transform: translateX(250%); opacity: 0.7; }
-  40% { transform: translateX(50%); opacity: 0.9; }
-  55% { transform: translateX(-15%); opacity: 1; }
-  65% { transform: translateX(8%); }
-  73% { transform: translateX(-5%); }
-  80% { transform: translateX(3%); }
-  85% { transform: translateX(-2%); }
-  90% { transform: translateX(1%); }
-  95% { transform: translateX(-0.5%); }
+  50% { transform: translateX(40%); opacity: 0.9; }
   100% { transform: translateX(0); opacity: 1; }
 }
 
-.slide-in-top { animation: slideInFromTop 0.9s ease-out forwards; }
-.slide-in-bottom { animation: slideInFromBottom 0.9s ease-out forwards; }
-.slide-in-left { animation: slideInFromLeft 0.9s ease-out forwards; }
-.slide-in-right { animation: slideInFromRight 0.9s ease-out forwards; }
+.slide-in-top { animation: slideInFromTop 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.slide-in-bottom { animation: slideInFromBottom 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.slide-in-left { animation: slideInFromLeft 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+.slide-in-right { animation: slideInFromRight 0.7s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
 
 /* Pushed down animation - existing blocks getting bumped by incoming blocks */
 /* Uses --push-distance CSS variable set inline for actual displacement */
 @keyframes pushedDown {
   0% { transform: translateY(var(--push-distance, -100%)); }
-  /* Impact moment - overshoot */
-  50% { transform: translateY(10%); }
-  65% { transform: translateY(-5%); }
-  78% { transform: translateY(3%); }
-  88% { transform: translateY(-1%); }
+  /* Hard stop at final position */
   100% { transform: translateY(0); }
 }
 
 .pushed-down {
-  animation: pushedDown 0.5s ease-out both;
+  animation: pushedDown 0.35s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
 /* Grid shake on impact - heavier, more rumbling */

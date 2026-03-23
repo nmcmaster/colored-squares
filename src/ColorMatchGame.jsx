@@ -989,11 +989,82 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
   const infernoScene = getCurrentScene();
 
   return (
-    <div className="min-h-screen bg-black flex flex-col woodcut-bg">
-      {/* Main content - split layout on desktop */}
-      <div className="flex-1 flex flex-col md:flex-row items-center justify-center gap-4 p-4">
-        {/* Game Grid - left side on desktop */}
-        <div className="relative flex-shrink-0 flex flex-col items-center">
+    <div className="min-h-screen bg-black flex flex-col woodcut-bg relative">
+      {/* Full bleed background image - mobile only, pinned to top */}
+      <div className="absolute inset-0 md:hidden bg-black overflow-hidden">
+        <img
+          src={infernoScene.currentScene}
+          alt={`${infernoScene.name} - Scene ${infernoScene.sceneIndex + 1}`}
+          className="w-full object-contain object-top"
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
+        />
+        {/* Mirrored reflection below */}
+        <img
+          src={infernoScene.currentScene}
+          alt=""
+          className="w-full object-contain object-bottom transform scale-y-[-1]"
+          style={{ marginTop: '-1px' }}
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
+        />
+        {/* Shadow descent transition */}
+        {sceneTransition && (
+          <div className="absolute inset-0 shadow-transition pointer-events-none" />
+        )}
+        {/* Circle info overlay - fades in and out */}
+        <div className="absolute inset-x-0 top-0 flex flex-col items-center text-center pt-6 px-4 circle-info-fade">
+          <div className="text-white/90 text-4xl font-serif mb-1 text-outline" style={{ fontFamily: 'Times New Roman, serif' }}>
+            {infernoScene.circle}
+          </div>
+          <div className="text-white/80 text-xl font-bold uppercase tracking-widest text-outline" style={{ fontFamily: 'Times New Roman, serif' }}>
+            {infernoScene.name}
+          </div>
+          <div className="text-white/50 text-sm mt-1 italic text-outline-light">
+            {infernoScene.subtitle}
+          </div>
+          <div className="mt-4 flex gap-4 text-lg">
+            {['△', '◈', '▽'].map((symbol, i) => (
+              <span
+                key={i}
+                className={`transition-all duration-500 text-outline ${
+                  i <= infernoScene.sceneIndex
+                    ? 'text-white/90 drop-shadow-[0_0_4px_rgba(255,255,255,0.6)]'
+                    : 'opacity-0'
+                }`}
+              >
+                {symbol}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Main content */}
+      <div className="flex-1 flex flex-col md:flex-row items-center justify-end md:justify-center gap-4 p-4 relative z-10">
+
+        {/* Inferno Illustration - desktop only, right side */}
+        <div className="hidden md:flex flex-col items-center justify-center flex-1 max-w-lg order-2">
+          <div className="relative w-full aspect-[3/4] bg-black/40 rounded-xl overflow-hidden border border-red-900/50">
+            <img
+              src={infernoScene.currentScene}
+              alt={`${infernoScene.name} - Scene ${infernoScene.sceneIndex + 1}`}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.target.style.display = 'none';
+              }}
+            />
+            {/* Shadow descent transition */}
+            {sceneTransition && (
+              <div className="absolute inset-0 shadow-transition pointer-events-none" />
+            )}
+          </div>
+        </div>
+
+        {/* Game Grid - bottom on mobile, left side on desktop */}
+        <div className="relative flex-shrink-0 flex flex-col items-center md:order-1">
           {/* Score counter - centered above grid */}
           <div className="text-center relative mb-4">
             {displayScore < score && (
@@ -1014,7 +1085,7 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
           </div>
           <div
             ref={gridRef}
-            className={`grid gap-1 p-2 bg-black/30 rounded-xl backdrop-blur-sm ${gridShake ? `grid-shake-${gridShake}` : ''}`}
+            className={`grid gap-1 p-2 ${gridShake ? `grid-shake-${gridShake}` : ''}`}
             style={{
               gridTemplateColumns: `repeat(${config.gridSize}, 1fr)`,
               width: `min(90vw, 400px)`,
@@ -1056,25 +1127,6 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
               +{float.points}
             </div>
           ))}
-        </div>
-
-        {/* Inferno Illustration - right side on desktop, hidden on mobile */}
-        <div className="hidden md:flex flex-col items-center justify-center flex-1 max-w-lg">
-          <div className="relative w-full aspect-[3/4] bg-black/40 rounded-xl overflow-hidden border border-red-900/50">
-            {/* Scene image */}
-            <img
-              src={infernoScene.currentScene}
-              alt={`${infernoScene.name} - Scene ${infernoScene.sceneIndex + 1}`}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.target.style.display = 'none';
-              }}
-            />
-            {/* Shadow descent transition */}
-            {sceneTransition && (
-              <div className="absolute inset-0 shadow-transition pointer-events-none" />
-            )}
-          </div>
         </div>
       </div>
 

@@ -119,64 +119,121 @@ body {
   animation: shadowDescent 5s ease-in-out forwards;
 }
 
-/* Block slide-in animations */
+/* Block slide-in animations - slow approach, hard collision, shuddering settle */
 @keyframes slideInFromTop {
-  0% { transform: translateY(-200%); opacity: 0.8; }
-  70% { transform: translateY(10%); }
-  85% { transform: translateY(-5%); }
+  0% { transform: translateY(-250%); opacity: 0.7; }
+  /* Slow approach */
+  40% { transform: translateY(-50%); opacity: 0.9; }
+  /* IMPACT - overshoot into position */
+  55% { transform: translateY(15%); opacity: 1; }
+  /* First bounce back */
+  65% { transform: translateY(-8%); }
+  /* Second collision */
+  73% { transform: translateY(5%); }
+  /* Shudder settle */
+  80% { transform: translateY(-3%); }
+  85% { transform: translateY(2%); }
+  90% { transform: translateY(-1%); }
+  95% { transform: translateY(0.5%); }
   100% { transform: translateY(0); opacity: 1; }
 }
 @keyframes slideInFromBottom {
-  0% { transform: translateY(200%); opacity: 0.8; }
-  70% { transform: translateY(-10%); }
-  85% { transform: translateY(5%); }
+  0% { transform: translateY(250%); opacity: 0.7; }
+  40% { transform: translateY(50%); opacity: 0.9; }
+  55% { transform: translateY(-15%); opacity: 1; }
+  65% { transform: translateY(8%); }
+  73% { transform: translateY(-5%); }
+  80% { transform: translateY(3%); }
+  85% { transform: translateY(-2%); }
+  90% { transform: translateY(1%); }
+  95% { transform: translateY(-0.5%); }
   100% { transform: translateY(0); opacity: 1; }
 }
 @keyframes slideInFromLeft {
-  0% { transform: translateX(-200%); opacity: 0.8; }
-  70% { transform: translateX(10%); }
-  85% { transform: translateX(-5%); }
+  0% { transform: translateX(-250%); opacity: 0.7; }
+  40% { transform: translateX(-50%); opacity: 0.9; }
+  55% { transform: translateX(15%); opacity: 1; }
+  65% { transform: translateX(-8%); }
+  73% { transform: translateX(5%); }
+  80% { transform: translateX(-3%); }
+  85% { transform: translateX(2%); }
+  90% { transform: translateX(-1%); }
+  95% { transform: translateX(0.5%); }
   100% { transform: translateX(0); opacity: 1; }
 }
 @keyframes slideInFromRight {
-  0% { transform: translateX(200%); opacity: 0.8; }
-  70% { transform: translateX(-10%); }
-  85% { transform: translateX(5%); }
+  0% { transform: translateX(250%); opacity: 0.7; }
+  40% { transform: translateX(50%); opacity: 0.9; }
+  55% { transform: translateX(-15%); opacity: 1; }
+  65% { transform: translateX(8%); }
+  73% { transform: translateX(-5%); }
+  80% { transform: translateX(3%); }
+  85% { transform: translateX(-2%); }
+  90% { transform: translateX(1%); }
+  95% { transform: translateX(-0.5%); }
   100% { transform: translateX(0); opacity: 1; }
 }
 
-.slide-in-top { animation: slideInFromTop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-.slide-in-bottom { animation: slideInFromBottom 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-.slide-in-left { animation: slideInFromLeft 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-.slide-in-right { animation: slideInFromRight 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+.slide-in-top { animation: slideInFromTop 0.9s ease-out forwards; }
+.slide-in-bottom { animation: slideInFromBottom 0.9s ease-out forwards; }
+.slide-in-left { animation: slideInFromLeft 0.9s ease-out forwards; }
+.slide-in-right { animation: slideInFromRight 0.9s ease-out forwards; }
 
-/* Grid shake on impact */
+/* Pushed down animation - existing blocks getting bumped by incoming blocks */
+/* Uses --push-distance CSS variable set inline for actual displacement */
+@keyframes pushedDown {
+  0% { transform: translateY(var(--push-distance, -100%)); }
+  /* Impact moment - overshoot */
+  50% { transform: translateY(10%); }
+  65% { transform: translateY(-5%); }
+  78% { transform: translateY(3%); }
+  88% { transform: translateY(-1%); }
+  100% { transform: translateY(0); }
+}
+
+.pushed-down {
+  animation: pushedDown 0.5s ease-out both;
+}
+
+/* Grid shake on impact - heavier, more rumbling */
 @keyframes gridShakeTop {
   0%, 100% { transform: translateY(0); }
-  25% { transform: translateY(6px); }
-  50% { transform: translateY(-3px); }
-  75% { transform: translateY(2px); }
+  10% { transform: translateY(8px); }
+  25% { transform: translateY(-5px); }
+  40% { transform: translateY(4px); }
+  55% { transform: translateY(-3px); }
+  70% { transform: translateY(2px); }
+  85% { transform: translateY(-1px); }
 }
 @keyframes gridShakeBottom {
   0%, 100% { transform: translateY(0); }
-  25% { transform: translateY(-6px); }
-  50% { transform: translateY(3px); }
-  75% { transform: translateY(-2px); }
+  10% { transform: translateY(-8px); }
+  25% { transform: translateY(5px); }
+  40% { transform: translateY(-4px); }
+  55% { transform: translateY(3px); }
+  70% { transform: translateY(-2px); }
+  85% { transform: translateY(1px); }
 }
 @keyframes gridShakeLeft {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(6px); }
-  50% { transform: translateX(-3px); }
-  75% { transform: translateX(2px); }
+  10% { transform: translateX(8px); }
+  25% { transform: translateX(-5px); }
+  40% { transform: translateX(4px); }
+  55% { transform: translateX(-3px); }
+  70% { transform: translateX(2px); }
+  85% { transform: translateX(-1px); }
 }
 @keyframes gridShakeRight {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-6px); }
-  50% { transform: translateX(3px); }
-  75% { transform: translateX(-2px); }
+  10% { transform: translateX(-8px); }
+  25% { transform: translateX(5px); }
+  40% { transform: translateX(-4px); }
+  55% { transform: translateX(3px); }
+  70% { transform: translateX(-2px); }
+  85% { transform: translateX(1px); }
 }
 
-.grid-shake-top { animation: gridShakeTop 0.3s ease-out; }
-.grid-shake-bottom { animation: gridShakeBottom 0.3s ease-out; }
-.grid-shake-left { animation: gridShakeLeft 0.3s ease-out; }
-.grid-shake-right { animation: gridShakeRight 0.3s ease-out; }
+.grid-shake-top { animation: gridShakeTop 0.5s ease-out; }
+.grid-shake-bottom { animation: gridShakeBottom 0.5s ease-out; }
+.grid-shake-left { animation: gridShakeLeft 0.5s ease-out; }
+.grid-shake-right { animation: gridShakeRight 0.5s ease-out; }

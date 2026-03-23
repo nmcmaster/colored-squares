@@ -361,36 +361,83 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
         }
       }, 300);
 
-      // After gap pause, smash in new blocks from random directions (chaotic!)
-      const directionNames = ['top', 'right', 'bottom', 'left'];
-
+      // After gap pause, new blocks drop in from top and push existing blocks down
       setTimeout(() => {
         const squares = squaresRef.current;
-        const emptyCells = clusterArray.filter(idx => squares[idx]?.state === 'empty');
+        const config = getLevelConfig();
+        const size = config.gridSize;
 
-        // Each empty cell gets a random direction
-        emptyCells.forEach(idx => {
-          const randomDir = directionNames[Math.floor(Math.random() * 4)];
-          squares[idx] = {
-            id: idx,
-            color: randomHSL(),
-            target: randomHSL(),
-            state: 'active',
-            slideFrom: randomDir,
-          };
-        });
+        // Process each column - blocks always come from top
+        for (let col = 0; col < size; col++) {
+          // Extract column with original row positions
+          const column = [];
+          for (let row = 0; row < size; row++) {
+            const sq = squares[row * size + col];
+            column.push({ ...sq, originalRow: row });
+          }
 
-        // Trigger grid shake in a random direction
-        setGridShake(directionNames[Math.floor(Math.random() * 4)]);
-        setTimeout(() => setGridShake(null), 300);
+          // Check if this column has any empty cells
+          const hasEmpty = column.some(sq => sq.state === 'empty');
+          if (!hasEmpty) continue;
 
-        // Clear slideFrom after animation
+          // Separate active blocks from empty (preserving original row info)
+          const activeBlocks = column.filter(sq => sq.state === 'active');
+          const emptyCount = size - activeBlocks.length;
+
+          // Create new blocks - these slide in from off-screen
+          const newBlocks = [];
+          for (let i = 0; i < emptyCount; i++) {
+            newBlocks.push({
+              id: -1,
+              color: randomHSL(),
+              target: randomHSL(),
+              state: 'active',
+              slideFrom: 'top',
+            });
+          }
+
+          // Existing blocks get "pushed" animation
+          // Calculate actual displacement for each block
+          const pushedBlocks = activeBlocks.map((b, i) => {
+            const newRow = emptyCount + i; // Where this block will end up
+            const displacement = newRow - b.originalRow; // How many rows it moves down
+            return {
+              ...b,
+              pushedDown: displacement > 0,
+              pushDisplacement: displacement, // Number of cells to move
+              pushDelay: i,
+            };
+          });
+
+          // New blocks at top, existing blocks below
+          const newColumn = [...newBlocks, ...pushedBlocks];
+
+          // Write back to grid
+          for (let row = 0; row < size; row++) {
+            const idx = row * size + col;
+            newColumn[row].id = idx;
+            // Clean up originalRow before storing
+            const { originalRow, ...blockData } = newColumn[row];
+            squares[idx] = blockData;
+          }
+        }
+
+        // Trigger grid shake when blocks land
+        setTimeout(() => {
+          setGridShake('top');
+          setTimeout(() => setGridShake(null), 500);
+        }, 450);
+
+        // Clear animation flags after animations complete
         setTimeout(() => {
           const squares = squaresRef.current;
           for (const sq of squares) {
             if (sq.slideFrom) delete sq.slideFrom;
+            if (sq.pushedDown) delete sq.pushedDown;
+            if (sq.pushDisplacement !== undefined) delete sq.pushDisplacement;
+            if (sq.pushDelay !== undefined) delete sq.pushDelay;
           }
-        }, 400);
+        }, 1200);
 
       }, 700); // Delay before blocks smash in
     } else {
@@ -766,10 +813,13 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
                   ${matchingSquaresRef.current.has(index) ? 'animate-ping opacity-0' : ''}
                   ${invalidSquareRef.current === index ? 'animate-shake' : ''}
                   ${square.slideFrom ? `slide-in-${square.slideFrom}` : ''}
+                  ${square.pushedDown ? 'pushed-down' : ''}
                 `}
                 style={{
                   backgroundColor: square.state === 'empty' ? 'transparent' : hslToString(square.color),
                   aspectRatio: '1',
+                  '--push-distance': square.pushDisplacement ? `${-100 * square.pushDisplacement}%` : undefined,
+                  animationDelay: square.pushDelay !== undefined ? `${400 + square.pushDelay * 80}ms` : undefined,
                 }}
               />
             ))}
@@ -1104,10 +1154,13 @@ const ColorMatchGame = ({ autoStartWatch = false, autoStartLevel = null }) => {
                   ${matchingSquaresRef.current.has(index) ? 'animate-ping opacity-0' : ''}
                   ${invalidSquareRef.current === index ? 'animate-shake' : ''}
                   ${square.slideFrom ? `slide-in-${square.slideFrom}` : ''}
+                  ${square.pushedDown ? 'pushed-down' : ''}
                 `}
                 style={{
                   backgroundColor: square.state === 'empty' ? 'transparent' : hslToString(square.color),
                   aspectRatio: '1',
+                  '--push-distance': square.pushDisplacement ? `${-100 * square.pushDisplacement}%` : undefined,
+                  animationDelay: square.pushDelay !== undefined ? `${400 + square.pushDelay * 80}ms` : undefined,
                 }}
               />
             ))}
